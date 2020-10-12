@@ -17,6 +17,11 @@ const useStyles = makeStyles((theme) => ({
     marginTop: 20,
   },
 
+  enableControl: {
+    marginBottom: 20,
+    marginTop: 20,
+  },
+
   selectInput: {
     margin: 10,
   },
@@ -91,6 +96,7 @@ export default function DataViewer({
       <Grid className={classes.root} container justify="space-between">
         <Grid item xs={5}>
           <FormControlLabel
+            className={classes.enableControl}
             control={
               <Switch id="enabled" checked={checked} onChange={toggleChecked} />
             }
@@ -99,7 +105,7 @@ export default function DataViewer({
           />
         </Grid>
         <Grid item xs={7}>
-          <FormControl variant="outlined">
+          <FormControl variant="outlined" className={classes.formControl}>
             <InputLabel htmlFor="calculation">Calculation</InputLabel>
             <Select
               native
