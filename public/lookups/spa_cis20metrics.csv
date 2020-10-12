@@ -1,0 +1,90 @@
+metricId,name,description,targetValue,weight,enabled
+"1,1,1",Percentage of actively scanned networks,,0.74,1,false
+"1,2,1",Percentage of the organization's networks monitored by a passive asset discovery tool,,0.74,1,true
+"1,3,1",Percentage of Infoblox instances sending logs to Splunk,,0.74,1,true
+"1,4,1",Percentage of matches for CIs in MDLZ Splunk Asset Inventory and ServiceNow CMDB,,0.74,1,true
+"1,5,1",Percentage of assets with full set of attributes presented in Inventory,,0.74,1,true
+"1,6,1","Percentage of 801.1x or MAC unauthenticated  (BYOD, Contractors, partners etc.) assets allowed to access Corporate Data VLAN",,0.74,0.34,true
+"1,6,2",Percentage of quarantined non-compliant assets via Cisco ISE Posture/Compliance checks,,0.74,0.33,true
+"1,6,3",Percentage of authorized cloud Sign In Hardware,Percentage of authorized assets accessing MDLZ data vs. all assets,0.74,0.33,true
+"1,7,1",Percentage of Network Switches configured for 802.1x or MAC port access authentication from total number of network switches,,0.74,1,true
+"1,8,1",Percentage of Network Switches configured for 802.1x certificate based port access authentication from total number of network switches,,0.74,1,true
+"3,1,1",Percentage of hardware assets (workstations and servers)  scanned for the last 30 days for vulnerabilities,,0.74,0.5,true
+"3,1,2",Check frequency of vulnerability scans and report percentage compliance with previous period,,0.74,0.5,true
+"3,2,1",Percentage of assets scanned for vulnerabilities through Authenticated remote or Agent local scans,,0.74,1,true
+"3,3,1",Percentage of  assets scanned for vulnerabilities through authenticated remote scan with a dedicated account (S-) for the respective Asset Type,,0.74,0.5,true
+"3,3,2",Percentage of dedicated accounts not being used for other activities than VM scanning,,0.74,0.5,true
+"3,4,1","Percentage of hardware assets covered by Automated OS Update tools like SCCM, Intune etc.",,0.74,1,true
+"3,5,1",Percentage of hardware assets covered by Automated Third-Party software update tool,,0.74,1,false
+"3,6,1",Percentage of On-time closed vulnerability detections (wthin 60 days) from all Closed vulnerabilities within last 60 days,,0.74,1,true
+"3,7,1",Percentage of discovered Asset vulnerabilities with Risk Level assigned,Count all newly detected vulnerabilities (last 30 days) with associated risk level,0.74,1,true
+"4,1,1",Azure AD: Percentage of inventoried Azure Privileged Roles,,0.74,0.33,true
+"4,1,2",On-Prem AD: Percentage of inventoried Privileged AD Groups,,0.74,0.33,true
+"4,1,3",Local Admins: Percentage of inventoried hardware devices for Local Admins & sudoers,,0.74,0.34,true
+"4,2,1",Binary metric - if any device has ACTIVE  QIDs related to default credentials or bruteforce attacking  will be considered as 0 % compliance. Otherwise 100%.,"Any devices with ACTIVE QIDs related to default credentials or bruteforce attacking  (QID=43021, 90081, 19008, 87098, 11804)",0.74,1,true
+"4,3,1",Percentage of A- accounts having normal LAN ID,,0.74,1,true
+"4,5,1",Percentage of Critical Business Services enabled for MFA,,0.74,0.5,true
+"4,5,2",Percentage of A- accounts enrolled for MFA,,0.74,0.5,true
+"4,6,1",Percentage of A- accounts using CyberArk Privilege Session Manager to establish remote terminal admin sessions,,0.74,0.5,true
+"4,6,2",Percentage of A- accounts managed by CyberArk,,0.74,0.5,true
+"4,8,1",Percentage of authorization systems monitored for add/remove members to administrative groups or roles,,0.74,1,true
+"4,9,1",Percentage of Workstations and Servers  configured to log unsuccessful login attempts,,0.74,1,false
+"6,1,1",Percentage of Servers and Network devices configured to use at least 3 NTP servers,,0.74,1,false
+"6,2,1",Percentage of devices which logs are collected by MDLZ SIEM platform,,0.74,1,true
+"6,3,1","Percentage of devices with enabled ""info"" level of logging",,0.74,1,true
+"6,4,1",Percentage of system logs retained in compliance with MDLZ Log Retention Policy,,0.74,1,true
+"6,5,1",Percentage of devices sending logs to Splunk,,0.74,1,true
+"6,6,1",Percentage of devices sending Security and Audit logs to Splunk,,0.74,1,true
+"6,7,1",Percentage of log-sources used for correlations or alerting in Splunk,,0.74,1,true
+"6,8,1",Percentage of False Positives vs all Security Incidents based on events from SIEM platforms,,0.74,1,true
+"7,4,1",Percentage of on-prem locations (IPAMs) having URL inspected traffic,,0.74,0.5,true
+"7,4,2",Percentage of devices having  URL inspected traffic when off-premise/remote workers,,0.74,0.5,true
+"7,5,1",Percentage of categorized web/URL traffic or services accessed by users in ZScaler WAF,,0.74,1,true
+"7,6,1",Percentage of off-prem devices having logged URL requests by WAF solutions,,0.74,0.5,true
+"7,6,2",Percentage of on-prem devices having logged URL requests by WAF solutions,,0.74,0.5,true
+"7,7,1",Percentage of inspected web/URL sessions,,0.74,0.5,true
+"7,7,2",Percentage of e-mail messages with rewritten URL,,0.74,0.5,true
+"7,8,1",Percentage of Inbound messages inspected for DMARC compliance,,0.74,1,true
+"7,9,1",Percentage of discarded Inbound messages with unnecessary attachments,,0.74,1,true
+"7,10,1",Percentage of inbound messages with attachments inspected for malware with Sandbox execution,,0.74,1,true
+"8,1,1",Percentage of hardware assets (Workstations and Servers)  covered by ATP,,0.74,1,true
+"8,2,1",Percentage of Active ATP protected assets   having communication with ATP admin console within last 15 days,,0.74,0.5,true
+"8,2,2",Percentage of hardware assets compliant with latest authorized version of ATP sensor/agent,,0.74,0.5,true
+"8,3,1",Percentage of Workstations enrolled for DEP,,0.74,0.5,false
+"8,3,2",Percentage of Workstations enrolled for ASLR,,0.74,0.5,false
+"8,4,1",Percentage of corporate assets (workstations)  configured to conduct anti-malware scan of removable media,,0.74,1,true
+"8,5,1","Percentage of corporate assets (workstations)  compliant with ""Not auto-run content from removable media"" policy",,0.74,1,true
+"8,6,1",Percentage of ATP/EDR admin consoles sending logs and alerts to Splunk within last 48 hours,,0.74,1,true
+"8,7,1",Percentage of Infoblox instances sending DNS logs to Splunk,,0.74,0.5,true
+"8,7,2",Percentage of endpoints sending DNS query logs to SIEM platform,,0.74,0.5,true
+"8,8,1",Percentage of corporate assets (Workstations and Servers)  sending CLI logs to Log Management System,,0.74,1,true
+"9,5,1",Percentage of Critical Servers covered by Application Firewall,,0.74,1,true
+"10,1,1",Percentage of hardware devices configured to be automatically backed up.,,0.74,1,true
+"10,2,1",Percentage of hardware devices configured to do a full automatic backup.,,0.74,1,true
+"11,4,1",Percentage of network devices without EOL OS related vulnerabilities.,Percentage of network devices without EOL OS related vulnerabilities.,0.74,1,true
+"11,6,1",Percentage of administrative remote sessions established from a Privilege Sessions Manager,,0.74,1,false
+"12,1,1",Percentage of premises having boundary firewall devices sending logs for analysis and monitoring to SIEM,,0.74,1,true
+"12,3,1",Percentage of Netowork boundary firewalls configured to use blacklisted sources/destinations.,,0.74,1,true
+"12,5,1",Percentage of Netowork boundary firewalls configured to log traffic.,,0.74,1,true
+"12,9,1",Percentage of hosting locations or office premises  covered by Web Proxy firewall,,0.74,1,true
+"12,11,1",Normal VPN accounts enrolled for MFA,Percentage of human related LAN IDs having VPN access enrolled for MFA,0.74,0.5,true
+"12,11,2",Normal accounts accessing Azure enrolled for MFA,Percentage of human-related LAN IDs accessing Azure cloud services enabled for MFA,0.74,0.5,true
+"13,4,1",Percentage of session IDs with appclass file share having action,,0.75,0.5,true
+"13,4,2",Percentage of session IDs with appclass web-mail having action,,0.74,0.5,true
+"13,6,1",Percentage of eligible workstations  covered by approved Encryption solution,,0.74,1,true
+"14,1,1",Percentage of Plants having network segregation on the firewalls,,0.74,1,true
+"14,2,1",Percentage of on-prem firewalls having filtering policies applied between VLANs,,0.74,1,true
+"15,1,1",Percentage of Wireless Network access locations with inventoried Wireless Access Points.,,0.75,1,true
+"15,10,1","Percentage of sites with CORPORATE Wi-Fi network enabled having BYOD, VISITOR or HOTSPOT SSIDs",,0.74,1,true
+"16,1,1",Percentage of Authentication Systems presented in MDLZ CMDB,,0.74,0,false
+"16,2,1",Percentage of Business Service CIs  configured to authenticate with SSO,,0.74,1,true
+"16,3,1",Percentage of accounts enrolled for MFA,,0.74,0.5,true
+"16,3,2",Percentage of accounts enrolled for Corporate Only Access,,0.74,0.5,true
+"16,6,1",Percentage of identities' account present into MDLZ  authroization systems,,0.74,1,true
+"16,7,1",Percentage of identities with Terminated Status in IDM with automatically disabled LANIDs in 24 hours,,0.74,1,true
+"16,8,1","Percentage of ""orphaned"" accounts in AD with status DISABLED",,0.74,1,true
+"16,9,1","Percentage of all AD accounts with LastLogon timestamp more than ""inactivity period"" with AccountControl status ""DISABLED""",,0.74,1,true
+"16,10,1",Percentage of AD accounts in scope having account expiration date less than 180 days,,0.74,1,true
+"16,11,1","Percentage of Workstations enabled for ""Locking screen"" GPO",,0.74,1,true
+"16,12,1","Percentage of authentication systems monitored for failed login attempts (e.g. with  event id  ""531: Logon Failure - Account currently disabled"" for AD)",,0.74,0,false
+"19,8,1",Percentage of Incidents/cases with existing priority based on affected User or Asset criticality or associated risk with it,,0.74,1,true

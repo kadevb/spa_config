@@ -1,0 +1,39 @@
+{
+  "title": "Material demo",
+  "devDependencies": {
+    "react-scripts": "latest"
+  },
+  "description": "https://github.com/mui-org/material-ui/blob/master/docs/src/pages/components/paper/Variants.js",
+  "dependencies": {
+    "@material-ui/core": "latest",
+    "@material-ui/lab": "^4.0.0-alpha.56",
+    "create-use-context": "^1.0.1",
+    "d3": "^6.2.0",
+    "fs-react": "0.0.4",
+    "node-sass": "^4.14.1",
+    "papaparse": "^5.3.0",
+    "react": "^16.13.1",
+    "react-dom": "latest",
+    "save": "^2.4.0"
+  },
+  "name": "material-demo-forked",
+  "version": "0.0.12",
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}

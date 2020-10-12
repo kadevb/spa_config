@@ -1,0 +1,7 @@
+categoryId,name,targetValue,weight,enabled
+1,Assets Protection,1,0.167,true
+2,Core Security controls,1,0.167,true
+3,Data Security,1,0.167,true
+4,Authorized access,1,0.167,true
+5,Workforce Cyber Readiness,1,0.166,true
+6,Incident Response & Penetration Testing,1,0.166,true

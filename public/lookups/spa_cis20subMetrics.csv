@@ -1,0 +1,143 @@
+subMetricId,name,description,targetValue,weight,enabled
+"1,1,1,1",OT/CCN,,0.74,0.5,false
+"1,1,1,2",IoT,,0.74,0.5,false
+"1,2,1,1",OT/CCN,,0.74,0.5,true
+"1,2,1,2",IT/Enterprise,,0.74,0.5,true
+"1,3,1,1",Infoblox Appliances,,0.74,1,true
+"1,4,1,1",Servers,,0.74,0.25,true
+"1,4,1,2",Workstations,,0.74,0.25,true
+"1,4,1,3",Network,,0.74,0.25,true
+"1,4,1,4",Mobile,,0.74,0.25,true
+"1,5,1,1",Servers,,0.74,0.25,true
+"1,5,1,2",Workstations,,0.74,0.25,true
+"1,5,1,3",Network,,0.74,0.25,true
+"1,5,1,4",Mobile,,0.74,0.25,true
+"1,6,1,1",All Hardware Assets,,0.74,1,true
+"1,6,2,1",All Hardware Assets,,0.74,1,true
+"1,6,3,1",All Hardware Assets,,0.74,1,true
+"1,7,1,1",All Managed Network Device Assets,,0.74,1,true
+"1,8,1,1",Percentage of Dot1x authenticated devices vs. all MDLZ Managed devices.,,0.74,1,true
+"3,1,1,1",Servers,,0.74,0.50,true
+"3,1,1,2",Workstation,,0.74,0.25,true
+"3,1,1,3",Network,,0.74,0.25,true
+"3,1,1,4",Mobile,,0.74,0.10,false
+"3,1,2,1",VM tools,Count of VM scans,0.74,1,true
+"3,2,1,1",Servers,Servers scanned for vulnerabilities,0.74,0.50,true
+"3,2,1,2",Workstations,Workstations scanned for vulnerabilities,0.74,0.25,true
+"3,2,1,3",Network,Network devices scanned for vulnerabilities,0.74,0.25,true
+"3,2,1,4",Mobile,Mobile devices scanned for vulnerabilities,0.74,0.10,false
+"3,3,1,1",Server,server VM scanned,0.74,0.25,true
+"3,3,1,2",Workstation,workstation VM scanned,0.74,0.25,true
+"3,3,1,3",Network,network VM scanned,0.74,0.25,true
+"3,3,1,4",Mobile,mobile VM scanned,0.74,0.25,true
+"3,3,2,1",Dedicated accounts for VM,VM scanning accounts,0.74,1,true
+"3,4,1,1",Servers,,0.74,0.40,true
+"3,4,1,2",Workstations,,0.74,0.20,true
+"3,4,1,3",Network,,0.74,0.30,true
+"3,4,1,4",Mobile,,0.74,0.10,true
+"3,5,1,1",Workstations,,0.74,0.40,false
+"3,5,1,2",Servers,,0.74,0.60,false
+"3,6,1,1",Servers,,0.74,0.50,true
+"3,6,1,2",Workstation,,0.74,0.25,true
+"3,6,1,3",Network,,0.74,0.25,true
+"3,7,1,1",Servers,,0.74,1,true
+"4,1,1,1",Accounts,Azure_Privileged_Roles,1,1,true
+"4,1,2,1",Accounts,AD_Privileged_Groups,1,1,true
+"4,1,3,1",Servers,Percentage of inventoried Servers for Local Admins & sudoers,0.85,0.50,true
+"4,1,3,2",Workstations,Percentage of inventoried Workstations for Local Admins & sudoers,0.90,0.50,true
+"4,2,1,1",Hardware Assets,,1,1,true
+"4,3,1,1",Accounts,Privileged accounts with normal LanID,1,1,true
+"4,5,1,1",Business Services enabled for MFA,Business Services enabled for MFA,0.80,1,true
+"4,5,2,1",Privileged accounts enrolled for MFA,Privileged accounts enrolled for MFA,0.95,1,true
+"4,6,1,1",Privileged Accounts,Percentage of Admin accounts  managed by CyberArk utilizing  Privelege Session Manager to establish remote admin sessions.,1,1,true
+"4,6,2,1",Privileged Accounts,Percentage of AD Admin accounts managed by CyberArk,1,1,true
+"4,8,1,1",Authorization systems monitored for add/remove members to admininistrative groups or roles,,1,1,true
+"4,9,1,1",Workstations and Servers  configured to log unsuccessful login attempts,,1,1,false
+"6,2,1,1",Percentage of devices which logs are collected by MDLZ SIEM platform - Server,Server,0.85,0.4,true
+"6,2,1,2",Percentage of devices which logs are collected by MDLZ SIEM platform - Workstation,Workstation,0.2,0.3,true
+"6,2,1,3",Percentage of devices which logs are collected by MDLZ SIEM platform - Network Device,Network Device,0.80,0.3,true
+"6,3,1,1",Servers sending logs to Splunk compliant with minimum required attributes for Security & Audit logs - Servers,Server,0.95,0.4,true
+"6,3,1,2",Workstations sending logs to Splunk compliant with minimum required attributes for Security & Audit logs,Workstation,0.90,0.2,true
+"6,3,1,3",Network devices sending logs to Splunk compliant with minimum required attributes for Security & Audit logs,Network Device,0.85,0.4,true
+"6,4,1,1",Log source indexes,Percentage of system logs retained in compliance with MDLZ Log Retention Policy,1,1,true
+"6,5,1,1",Central Log Management - Server,Server,0.89,0.4,true
+"6,5,1,2",Central Log Management - Workstation,Workstation,0.5,0.3,true
+"6,5,1,3",Central Log Management - Network Devices,Network Devices,0.88,0.3,true
+"6,6,1,1",Security Log Management - Server,Server,0.89,0.4,true
+"6,6,1,2",Security Log Management - Workstation,Workstation,0.60,0.2,true
+"6,6,1,3",Security Log Management - Network Devices,Network Devices,0.70,0.4,true
+"6,7,1,1",Log source systems,Splunk Indexes,1,1,true
+"6,8,1,1",Security Incidents,Percentage of True Positives vs. all security incidents from SIEM platforms,1,1,true
+"7,4,1,1",IPAM_Locations,Enforce Network-Based URL Filters for On-Premise - IPAM,0.85,1,true
+"7,4,2,1",Workstations,Enforce Network-Based URL Filters for Off-Premise - Workstation,0.70,1,true
+"7,5,1,1",Web sessions,Percentage of categorized web/URL sessions or services accessed by users in ZScaler WAF.,1,1,true
+"7,6,1,1",Workstations,Percentage of off-prem devices having logged URL requests by WAF solutions.,0.90,1,true
+"7,6,2,1",Servers,Percentage of on-prem devices having logged URL requests by WAF solutions.,0.95,0.5,true
+"7,6,2,2",Workstations,Percentage of on-prem devices having logged URL requests by WAF solutions.,0.90,0.5,true
+"7,7,1,1",Web sessions,Percentage of inspected web/URL sessions.,1,1,true
+"7,7,2,1",Email messages,Percentage of e-mail messages with rewritten URL.,1,1,true
+"7,8,1,1",Email messages,Percentage of inbound messages inspected for DMARC compliance,1,1,true
+"7,9,1,1",Email messages,Percentage of discarded inbound messages with unnecessary attachments,1,1,true
+"7,10,1,1",Email messages,Number of inbound messages with attachments inspected for malware with Sandbox execution - Binary,1,1,true
+"8,1,1,1",Hardware assets covered by ATP - Servers,Servers,0.95,0.5,true
+"8,1,1,2",Hardware assets covered by ATP - Workstations,Workstations,0.95,0.5,true
+"8,2,1,1",Recent communication ATP protected assets with ATP admin console - Server,Servers,0.90,0.5,true
+"8,2,1,2",Recent communication ATP protected assets with ATP admin console - Workstation,Workstations,0.91,0.5,true
+"8,2,2,1",Hardware assets compliant with the latest authorized version of ATP sensor/agent - Server,Servers,0.92,0.5,true
+"8,2,2,2",Hardware assets compliant with the latest authorized version of ATP sensor/agent - Workstation,Workstations,0.89,0.5,true
+"8,4,1,1",All Hardware Assets,,1,1,true
+"8,5,1,1",All Hardware Assets,,1,1,true
+"8,6,1,1",ATP/EDR Technologies,Percentage of ATPs/EDRs sending data to Splunk,1,1,true
+"8,7,1,1",Infoblox instances sending DNS query logs to Splunk,Percentage of Infoblox instances sending DNS query logs to Splunk.,1,1,true
+"8,7,2,1",Server endpoints sending DNS query logs to SIEM platform,Percentage of endpoints sending DNS query logs to SIEM platform,0.85,0.50,true
+"8,7,2,2",Workstation endpoints sending DNS query logs to SIEM platform,Percentage of endpoints sending DNS query logs to SIEM platform,0.90,0.50,true
+"8,8,1,1",Servers with CLI/PowerShell logging,,0.85,0.50,true
+"8,8,1,2",Servers with UF and log collection,Percentage of servers with UF and enabled for Windows/System log collection,0.85,0.50,true
+"9,5,1,1",Servers,Percentage of Critical Servers covered by Application Firewall.,0.85,1,true
+"10,1,1,1",Servers,Percentage of servers which are configured to be automatically backed up.,0.95,0.50,true
+"10,1,1,2",Network,Percentage of network devices which are configured to be automatically backed up.,0.85,0.50,true
+"10,2,1,1",Servers,Percentage of servers which are configured to do a full automatic backup.,0.95,0.50,true
+"10,2,1,2",Network,Percentage of network devices which are configured to do a full automatic backup.,0.85,0.50,true
+"11,4,1,1",Percentage of network devices without EOL OS related vulnerabilities.,Percentage of network devices without EOL OS related vulnerabilities.,0.85,1,true
+"11,6,1,1",Administrative Remote Sessions,Percentage of administrative remote sessions  established from a Privilege Sessions Manager,0.85,1,false
+"12,1,1,1",Manufacturing Plants,Percentage of Manufacturing Plants locations having boundary firewall devices sending logs for analysis and monitoring to SIEM,0.95,0.20,true
+"12,1,1,2",Office Network Premises,Percentage of Office Network Premises locations having boundary firewall devices sending logs for analysis and monitoring to SIEM,0.95,0.20,true
+"12,1,1,3",DXC DCs,Percentage of DXC DCs premises having boundary firewall devices sending logs for analysis and monitoring to SIEM,0.90,0.30,true
+"12,1,1,4",Azure Cloud,Percentage of Azure Cloud premises having boundary firewall devices sending logs for analysis and monitoring to SIEM,0.85,0.30,true
+"12,3,1,1",On-prem boundary devices,Percentage of on-prem boundary firewalls configured to use blacklisted sources/destinations.,0.95,0.40,true
+"12,3,1,2",Data Centers' boundary devices,Percentage of DC boundary firewalls configured to use blacklisted sources/destinations.,0.90,0.30,true
+"12,3,1,3",Azure Cloud boundary devices,Percentage of Azure Cloud boundary firewalls configured to use blacklisted sources/destinations.,0.85,0.30,true
+"12,5,1,1",On-prem boundary devices,Percentage of on-prem boundary firewalls configured to log traffic.,0.95,0.40,true
+"12,5,1,2",Data Centers' boundary devices,Percentage of DC boundary firewalls configured to log traffic.,0.90,0.30,true
+"12,5,1,3",Azure Cloud boundary devices,Percentage of Azure Cloud boundary firewalls configured to log traffic.,0.85,0.30,true
+"12,9,1,1",On-prem boundary devices,Percentage of on-prem locations covered by Web Proxy.,0.74,0.34,true
+"12,9,1,2",Data Centers boundary devices,Percentage of DC locations covered by Web Proxy.,0.74,0.33,true
+"12,9,1,3",Azure Cloud boundary devices,Percentage of Azure Cloud locations covered by Web Proxy.,0.74,0.33,true
+"12,11,1,1",Normal VPN accounts enrolled for MFA,Percentage of human-related LAN IDs having VPN access enrolled for MFA.,0.74,1,true
+"12,11,2,1",Normal accounts accessing Azure enrolled for MFA,Percentage of human-related LAN IDs accessing Azure cloud services enabled for MFA.,0.74,1,true
+"13,4,1,1",File Share Web Session,Percentage of session IDs with appclass file share having action,0.85,1,true
+"13,4,2,1",Webmail Web Session,Percentage of session IDs with appclass web-mail having action,0.84,1,true
+"13,6,1,1",Encrypted Workstation,Percentage of eligible workstations  covered by approved Encryption solution,0.85,1,true
+"14,1,1,1",On-Prem Locations,Percentage of Plants having network segregation on the firewalls.,0.85,1,true
+"14,2,1,1",On-Prem Firewalls,Percentage of on-prem firewalls having filtering policies applied between VLANs.,1,1,true
+"15,1,1,1",On-Prem Locations,Percentage of Wireless Network access locations with inventoried Wireless Access Points.,0.85,1,true
+"15,10,1,1",IPAM Locations,"Percentage of sites with CORPORATE Wi-Fi network enabled having BYOD, VISITOR or HOTSPOT SSIDs",0.95,1,true
+"16,1,1,1",Authentication systems,Authentication systems,0.74,0,false
+"16,2,1,1",SSO Authentication,SSO Authentication,0.74,1,true
+"16,3,1,1",Normal LAN IDs,Percentage of N accounts enrolled for MFA,0.95,0.50,true
+"16,3,1,2",A- LAN IDs,Percentage of A accounts enrolled for MFA,0.90,0.50,true
+"16,3,2,1",Normal LAN IDs,Percentage of N accounts enrolled for Corporate Only Access,0.74,0.50,true
+"16,3,2,2",A- LAN IDs,Percentage of A accounts enrolled for Corporate Only Access,0.74,0.50,true
+"16,6,1,1",Accounts,,1,1,true
+"16,7,1,1",Accounts,,1,1,true
+"16,8,1,1",Normal LAN IDs,Percentage of disabled orphaned N accounts,0.95,0.30,true
+"16,8,1,2",A- LAN IDs,Percentage of disabled orphaned A accounts,0.90,0.4,true
+"16,8,1,3",P- LAN IDs,Percentage of disabled orphaned P accounts,0.85,0,false
+"16,8,1,4",S- LAN IDs,Percentage of disabled orphaned S accounts,0.85,0.3,true
+"16,9,1,1",Accounts,,0.74,1,true
+"16,10,1,1",Normal LAN IDs,,0.74,0.5,true
+"16,10,1,2",A- LAN IDs,,0.74,0.5,true
+"16,10,1,3",P- LAN IDs,,0.74,0,false
+"16,11,1,1",Lock Host Sessions After Inactivity,detected with QID for screensaver policy,0.95,1,true
+"16,12,1,1",Monitor Attempts to Access Deactivated Accounts,,1,0,false
+"19,8,1,1",Incidents/cases,Percentage of Incidents/cases with existing priority based on affected User or Asset criticality or associated risk with it,1,1,true

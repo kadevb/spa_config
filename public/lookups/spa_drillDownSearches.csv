@@ -1,0 +1,1602 @@
+searchId,title,drillDownSearch
+01010101,"spa_01010101_utilizeActiveDiscoveryOtCcn_search","index=fake
+`spa_comment_macro(""EODS"")`
+"
+01010102,"spa_01010102_utilizeActiveDiscoveryIot_search","index=fake
+`spa_comment_macro(""EODS"")`
+"
+01020101,"spa_01020101_utilizePassiveDiscoveryOtCcn_search","| tstats count where index=mdlz_hosting_crowdstrike_cat1 OR index=mdlz_hosting_symantec_cat1 OR index=mdlz_ot_armis_cat1 by index
+`spa_comment_macro(""EODS"")` 
+| eval value=if(count>0,""1"",""0"")
+| eventstats sum(value) as currentValue
+| eval currentValue=if(currentValue>0,""1"",""0"")
+| eval spa_flag=case(currentValue=1, ""false"", 1=1, ""true""), spa_identity=index, spa_extra=""Check data input if metric's value equals to '0'""
+"
+01020102,"spa_01020102_utilizePassiveDiscoveryIT_search","| tstats count where index=mdlz_hosting_nexthink_cat1 OR index=mdlz_network_solarwinds_cat1 OR index=mdlz_hosting_drlan_cat1 OR index=mdlz_hosting_esl_cat1 OR index=mdlz_hosting_sccm_cat1 by index
+`spa_comment_macro(""EODS"")` 
+| eval value=if(count>0,""1"",""0"")
+| eventstats sum(value) as currentValue
+| eval currentValue=if(currentValue>0,""1"",""0"")
+| eval spa_flag=case(currentValue=1, ""false"", 1=1, ""true""), spa_identity=index, spa_extra=""Check data input if metric's value equals to '0'""
+"
+01030101,"spa_01030101_dhcpLoggingInstances_search","| inputlookup spa_dhcpServers_lookup 
+| join type=left hostname 
+    [| tstats count where `spa_dhcpData_macro` by host 
+    | rename host as hostname] 
+| join type=left ipAddress 
+    [| tstats count where `spa_dhcpData_macro` by host 
+    | rename host as ipAddress] 
+`spa_comment_macro(""EODS"")` 
+| eval forwarding_hosts=if(isnull(count),0,1)
+| eval spa_flag=case(forwarding_hosts=1, ""false"", 1=1, ""true""), spa_identity=hostname, spa_extra=""IP_Address: "".ipAddress
+"
+01040101,"spa_01040101_serverAssetInventoryCoverage_search","(`spa_assetInventoryData_macro` earliest=-24h latest=now) OR (`spa_assetInventoryData_macro` source=""cmdb_ci_server.csv"" earliest=-300d latest=now)  AND ((asset_type=Server AND asset_status=ACTIVE) OR name=*)
+`spa_comment_macro(""EODS"")`
+| eval asset_name=trim(upper(asset_name), "" "")
+| rex field=asset_name mode=sed ""s/\-.*$//""
+| rex field=asset_name mode=sed ""s/\..*$//""
+| eval mac_address=if(isnull(mac_address),""0"",mac_address)
+| eval name=trim(upper(name), "" "")
+| rex field=name mode=sed ""s/\-.*$//""
+| rex field=name mode=sed ""s/\..*$//""
+| eval host_name=if(isnull(asset_name),name,asset_name)
+| stats values(index) as val_ by host_name, mac_address
+| eventstats count(host_name) as count_host_name_one by host_name
+| eventstats count(mac_address) as count_mac_address_one by mac_address
+| eventstats count as count_host_name_by_two by host_name, val_
+| eventstats count as count_mac_address_by_two by mac_address, val_
+| eval mv_count= mvcount(val_)
+| eval match_host_name=if(mv_count<2 AND count_host_name_one - count_host_name_by_two >= 1, 1, 0)
+| eval match_mac_address=if(mv_count<2 AND count_mac_address_one - count_mac_address_by_two >= 1, 1, 0)
+| eval full_match=if((match_mac_address=1 OR mv_count=2 OR match_host_name=1) ,1 ,0 )
+| search val_=mdlz_asset_inventory_cat1 OR mv_count=2
+| eval spa_flag=case(full_match=1, ""false"", 1=1, ""true""), spa_identity=if((full_match=1 and  match_mac_address=1),mac_address,host_name)
+| eval spa_extra=if((full_match=0), ""no match"", if((full_match=1 and match_host_name>=match_mac_address), ""match by host_name"", ""match by mac_address""))
+"
+01040102,"spa_01040102_workstationAssetInventoryCoverage_search","(`spa_assetInventoryData_macro` earliest=-24h latest=now) OR (`spa_assetInventoryData_macro` source=""cmdb_ci_workstation.csv"" earliest=-300d latest=now )  AND ((asset_type=Workstation AND asset_status=ACTIVE) OR operational_status=Operational)
+`spa_comment_macro(""EODS"")`
+| eval asset_name=trim(upper(asset_name), "" "")
+| eval asset_sn=trim(upper(asset_sn), "" "")
+| eval name=trim(upper(name), "" "")
+| eval serial_number=trim(upper(serial_number), "" "")
+| eval host_name=if(isnull(asset_name),name,asset_name)
+| eval serial_number=if(isnull(serial_number),asset_sn,serial_number)
+| stats values(index) as val_ by host_name, serial_number
+| eventstats count(host_name) as count_host_name_one by host_name
+| eventstats count(serial_number) as count_serial_number_one by serial_number
+| eventstats count as count_host_name_by_two by host_name, val_
+| eventstats count as count_serial_number_by_two by serial_number, val_
+| eval mv_count= mvcount(val_)
+| eval match_host_name=if(mv_count<2 AND count_host_name_one - count_host_name_by_two >= 1, 1, 0)
+| eval match_serial_number=if(mv_count<2 AND count_serial_number_one - count_serial_number_by_two >= 1, 1, 0)
+| eval full_match=if((match_serial_number=1 OR mv_count=2 OR match_host_name=1) ,1 ,0 )
+| search val_=mdlz_asset_inventory_cat1 OR mv_count=2
+| eval spa_flag=case(full_match=1, ""false"", 1=1, ""true""), spa_identity=if((full_match=1 and  match_serial_number=1),serial_number,host_name)
+| eval spa_extra=if((full_match=0), ""no match"", if((full_match=1 and match_host_name>=match_serial_number), ""match by host_name"", ""match by serial_number""))
+"
+01040103,"spa_01040103_networkAssetInventoryCoverage_search","index=fake
+`spa_comment_macro(""EODS"")`
+"
+01040104,"spa_01040104_mobileAssetInventoryCoverage_search","index=fake
+`spa_comment_macro(""EODS"")`
+"
+01050101,"spa_01050101_serverAssetInventoryInformation_search","`spa_assetInventoryData_macro` asset_status=ACTIVE asset_type=server
+`spa_comment_macro(""EODS"")`
+| eval c1=if(isnull(asset_name),1,0), c2=if(isnull(asset_ip),1,0), c3=if(isnull(hosting_system_environment),1,0), c4=if(isnull(hosting_service_provider),1,0), c5=if(isnull(hosting_os_version),1,0), check=if(c1+c2+c3+c4+c5=0, 1, 0)
+| eval spa_flag=case(check=1, ""false"", 1=1, ""true""), spa_identity=asset_name, spa_extra=if(c1=1,""asset_name, "","""").if(c2=1,""asset_ip, "","""").if(c3=1,""hosting_system_environment, "","""").if(c4=1,""hosting_service_provider, "","""").if(c5=1,""hosting_os_version"","""")
+"
+01050102,"spa_01050102_workstationAssetInventoryInformation_search","`spa_assetInventoryData_macro` asset_status=ACTIVE asset_type=workstation 
+`spa_comment_macro(""EODS"")` 
+| eval c1=if(isnull(asset_name),1,0), c2=if(isnull(asset_sn),1,0), c3=if(isnull(asset_os_simple),1,0), c4=if(isnull(asset_region),1,0), c5=if(isnull(asset_country),1,0), check=if(c1+c2+c3+c4+c5=0, 1, 0) 
+| eval spa_flag=case(check=1, ""false"", 1=1, ""true""), spa_identity=asset_name, spa_extra=if(c1=1,""asset_name, "","""").if(c2=1,""asset_sn, "","""").if(c3=1,""asset_os_simple, "","""").if(c4=1,""asset_region, "","""").if(c5=1,""asset_country"","""") 
+"
+01050103,"spa_01050103_networkAssetInventoryInformation_search","`spa_networkInventoryData_macro`
+`spa_comment_macro(""EODS"")`
+| stats values(Serial) as Serial, values(IP_Address) as IP_Address, values(IPAM_Code) as IPAM_Code, values(IOSVersion) by SysName 
+| eval c1=case(isnull(SysName),1, SysName=""null"",1,true(),0), c2=case(isnull(Serial),1, Serial=""null"",1,true(),0), c3=case(isnull(IP_Address),1, IP_Address=""null"",1,true(),0), c4=case(isnull(IPAM_Code),1, IPAM_Code=""null"",1,true(),0), c5=case(isnull(IOSVersion),1, IOSVersion=""null"",1,true(),0), check=if(c1+c2+c3+c4+c5=0, 1, 0) 
+| eval spa_flag=case(check=1, ""false"", 1=1, ""true""), spa_identity=SysName, spa_extra=if(c1=1,""SysName, "","""").if(c2=1,""Serial, "","""").if(c3=1,""IP_Address, "","""").if(c4=1,""IPAM_Code, "","""").if(c5=1,""IOSVersion"","""")
+"
+01050104,"spa_01050104_mobileAssetInventoryInformation_search","index=zero
+`spa_comment_macro(""EODS"")`
+"
+01060101,"spa_01060101_macAuthenticatedDevices_search","`spa_networkInventoryData_macro` eventtype=cisco-ise-authentication SelectedAuthorizationProfiles=PermitAccess* 
+`spa_comment_macro(""EODS"")`
+| stats values(IdentityPolicyMatchedRule) AS IdentityPolicyMatchedRule by src_mac
+| eval match=if(IdentityPolicyMatchedRule LIKE ""%MAB%"" OR IdentityPolicyMatchedRule LIKE ""%Dot1x%"", 1, 0), spa_flag=case(match=1, ""false"", 1=1, ""true""), spa_identity=src_mac, spa_extra=case(match=1, ""Device authenticated via Dot1x or MAB"", true(), ""Device NOT authenticated via Dot1x or MAB"")
+"
+01060201,"spa_01060201_quarantinedDevices_search","index=zero
+`spa_comment_macro(""EODS"")`
+"
+01060301,"spa_01060301_authorizedCloudSignInDevices_search","(`spa_authenticationData_macro` earliest=-48h@h latest=now) OR (`spa_networkInventoryData_macro` earliest=-48h@h latest=now)
+`spa_comment_macro(""EODS"")`
+| eval deviceDetail_displayName=if(isnull(asset_name),'deviceDetail.displayName',asset_name)
+| eval deviceDetail_displayName=trim(upper(deviceDetail_displayName), "" "")
+| stats values(index) as val_ by deviceDetail_displayName
+| mvexpand val_
+| eval mark=1
+| xyseries deviceDetail_displayName, val_, mark
+| eval matched=if(mdlz_asset_inventory_cat1=mdlz_azure_signin_cat1,1,0)
+| search mdlz_azure_signin_cat1 =1 AND matched=0
+| eval applied_actions = 0
+| eval spa_flag=case(applied_actions=1, ""false"", 1=1, ""true""), spa_identity=deviceDetail_displayName
+| eval spa_extra=if(applied_actions=1,""have applied an action "", ""need to apply actions"")
+| `spa_summary_macro(5)`
+| `spa_enrichSubMetric_macro(""1,6,3,1"")`
+| `spa_normalizeCurrentValue_macro`
+| `spa_normalizeTargetValue_macro`
+| `spa_performance_macro(5)`"
+01070101,"spa_01070101_macAuthenticationEnabledDevices_search","`spa_networkInventoryData_macro` sourcetype=""cisco:ise:syslog"" OR (`spa_networkInventoryData_macro` sourcetype=""solarwinds*"" Network_Function=""*switch"" OR Network_Function=""wireless access point"" OR Network_Function=""wireless lan controller"") earliest=-7d@d
+`spa_comment_macro(""EODS"")` 
+| eval NAS_IP_Address=if(isnull(IP_Address),NAS_IP_Address,IP_Address), Serial=if(Serial="""",null(),Serial)
+| stats values(index) as idxs, values(Serial) as Serial, values(SysName) as SysName, values(Country) as Country, values(IPAM_Code) as IPAM_Code, dc(Serial) as scount by NAS_IP_Address 
+| eval match=if(mvcount(idxs)>1, scount, 0) 
+| eval spa_flag=case(match>=1, ""false"", 1=1, ""true""), spa_identity=NAS_IP_Address, spa_extra=""Domain - "".SysName."", Country - "".Country."", IPAM Code - "".IPAM_Code
+"
+01080101,"spa_01080101_certAuthenticationEnabledDevices_search","(`spa_authenticationData_macro` sourcetype=""cisco:ise:syslog"") OR (`spa_assetInventoryData_macro`)  
+| eval new_asset_name=coalesce(UPPER(asset_name), UPPER(Name)), new_mac_address=coalesce(src_mac, mac_addresses), new_mac_address=split(new_mac_address, "", "")
+| mvexpand new_mac_address
+| rex field=new_asset_name mode=sed ""s/\..*$//""
+| stats values(new_asset_name) as new_asset_name, values(index) as idx by new_mac_address
+| where mvcount(idx)>1
+| mvexpand new_asset_name
+| union
+    [ search `spa_assetInventoryData_macro` asset_status=ACTIVE earliest=-48h@h
+        | eval idx=index, new_asset_name=UPPER(asset_name)
+    | table new_asset_name idx ]
+| stats values(idx) as idx by new_asset_name
+| where idx=""mdlz_asset_inventory_cat1""
+| eval mv=mvcount(idx)
+| eval spa_flag=if(mv=3,""false"",""true""), spa_identity=new_asset_name, spa_extra=if(mv=3,""Device Found In Asset Inventory"", ""Device NOT Found in Asset Inventory"")
+"
+03010101,"spa_03010101_serverVulnerabilityScan_search","`spa_assetInventoryData_macro` asset_type=Server asset_status=ACTIVE earliest=-24h@h
+| eval asset_ip=split(asset_ip,"" "")
+| fillnull value=Unknown asset_ip
+| mvexpand asset_ip | rex field=asset_name mode=sed ""s/\..*$//""
+| eval asset_name=upper(asset_name)
+| table asset_name asset_ip asset_type
+| append [| tstats count as count from datamodel=Vulnerabilities.Vulnerabilities WHERE (earliest=-30d@d) by Vulnerabilities.dest
+    | rename Vulnerabilities.dest as asset_ip
+    | table asset_ip count]
+| eval count = if(isnotnull(count),count,""0"")
+| stats values(asset_name) as asset_name, max(count) as count by asset_ip
+| mvexpand asset_name
+| eval spa_flag=if(count=""0"", ""true"", ""false""), spa_identity=asset_name, spa_extra=(""hostname: "".asset_name)+if(spa_flag=""false"","". Server scanned in the last 30 days"", "". Server NOT scanned in the last 30 days"")
+"
+03010102,"spa_03010102_workstationVulnerabilityScan_search","`spa_assetInventoryData_macro` asset_type=Workstation asset_status=ACTIVE earliest=-24h@h
+| eval asset_ip=split(asset_ip,"" "")
+| fillnull value=Unknown asset_ip
+| mvexpand asset_ip | rex field=asset_name mode=sed ""s/\..*$//""
+| eval asset_name=upper(asset_name)
+| table asset_name asset_ip asset_type
+| append [| tstats count as count from datamodel=Vulnerabilities.Vulnerabilities WHERE (earliest=-30d@d) by Vulnerabilities.dest
+    | rename Vulnerabilities.dest as asset_ip
+    | table asset_ip count]
+| eval count = if(isnotnull(count),count,""0"")
+| stats values(asset_name) as asset_name, max(count) as count by asset_ip
+| mvexpand asset_name
+| eval spa_flag=if(count=""0"", ""true"", ""false""), spa_identity=asset_name, spa_extra=(""hostname: "".asset_name)+if(spa_flag=""false"","". Server scanned in the last 30 days"", "". Server NOT scanned in the last 30 days"")
+"
+03010103,"spa_03010103_networkVulnerabilityScan_search","`spa_networkInventoryData_macro`
+| stats count by IPAddress NodeName
+| append [| tstats  summariesonly=t values(Vulnerabilities.last_scan_time) as last_scan from datamodel=Vulnerabilities.Vulnerabilities WHERE (earliest=-30d@d) by Vulnerabilities.dest
+    |  eval current_time=now(), days = floor((current_time - strptime(last_scan, ""%Y-%m-%d"")) / 86400)
+    | where days<30
+    | rename Vulnerabilities.dest as IPAddress
+    | table IPAddress last_scan]
+| stats values(NodeName) as NodeName, values(last_scan) as last_scan by IPAddress
+| where isnotnull(NodeName)
+`spa_comment_macro(""EODS"")` 
+| eval spa_flag=if(isnull(last_scan), ""true"", ""false""), spa_identity=IPAddress, spa_extra=(""hostname: "".NodeName)+if(spa_flag=""false"","". Network device scanned in the last 30 days"", "". Network device NOT scanned in the last 30 days"")
+"
+03010104,"spa_03010104_mobileVulnerabilityScan_search","index=imaginery
+`spa_comment_macro(""EODS"")`
+"
+03010201,"spa_03010201_vulnerabilityScanners_search","earliest=-30d@d `spa_vulnerabilityData_macro` (sourcetype=qualys:hostDetection HOSTVULN) STATUS!=FIXED | stats dc(LAST_SCAN_DATETIME) as Total_Scans by IP, index
+| sort 1 - Total_Scans
+| lookup spa_vulnerabilityScanners_lookup index
+`spa_comment_macro(""EODS"")` 
+| eval check=if(isnull(Total_Scans),0,1)
+| eval spa_flag=case(check=1, ""false"", 1=1, ""true""), spa_identity=VS_Tool, spa_extra=""If empty, please check log source.""`spa_comment_macro(""EODS"")`
+"
+03020101,"spa_03020101_serverAuthenticatedVulnerabilityScan_search","`spa_assetInventoryData_macro` asset_status=ACTIVE asset_type=SERVER earliest=-48h@h 
+| eval asset_ip=split(asset_ip, "" "")
+| mvexpand asset_ip 
+| union 
+    [| tstats summariesonly=t latest(Vulnerabilities.last_update_time) as last_update_time from datamodel=Vulnerabilities WHERE (earliest=-30d@d) sourcetype=""crowdstrike:falconhost:query:spotlight"" Vulnerabilities.hostname!=UNKNOWN by Vulnerabilities.hostname Vulnerabilities.dest 
+    | rename Vulnerabilities.hostname as asset_name, Vulnerabilities.dest as asset_ip 
+    | eval index=""Spotlight"" ] 
+| eval asset_name=upper(asset_name) 
+| stats values(index) as idxs by asset_name, asset_ip 
+| eventstats count(asset_name) as count_asset_name_one by asset_name 
+| eventstats count(asset_ip) as count_asset_ip_one by asset_ip 
+| eventstats count as count_asset_name_by_two by asset_name, idxs 
+| eventstats count as count_asset_ip_by_two by asset_ip, idxs 
+| eval mv=mvcount(idxs) 
+| eval match_asset_name=if(mv<2 AND count_asset_name_one - count_asset_name_by_two >= 1, 1, 0) 
+| eval match_asset_ip=if(mv<2 AND count_asset_ip_one - count_asset_ip_by_two >= 1, 1, 0) 
+| eval full_match=if((match_asset_ip=1 OR mv=2 OR match_asset_name=1) ,1 ,0) 
+| search idxs=mdlz_asset_inventory_cat1 OR mv=2 AND full_match=1 
+| eval idxs=""Source 1"", Status=""Pass"", tracking_method=""""
+| union 
+    [ search `spa_assetInventoryData_macro` asset_status=ACTIVE asset_type=SERVER earliest=-48h@h 
+    | eval asset_ip=split(asset_ip, "" "") 
+    | mvexpand asset_ip 
+    | union 
+        [| tstats summariesonly=t latest(Vulnerabilities.last_update_time) as last_update_time, values(Vulnerabilities.spa_tracking_method) as tracking_method, values(Vulnerabilities.spa_qid) as QID from datamodel=Vulnerabilities WHERE (earliest=-30d@d) sourcetype=""qualys:hostDetection"" Vulnerabilities.hostname!=UNKNOWN by Vulnerabilities.hostname Vulnerabilities.dest 
+        | rename Vulnerabilities.hostname as asset_name, Vulnerabilities.dest as asset_ip 
+        | eval index=""Qualys"", Status=if(QID=""70053"" OR QID=""38307"" OR QID=""150007"" OR QID=""19129"" OR QID=""19648"" OR QID=""19844"" OR QID=""19907"" OR QID=""20032"" OR QID=""38668"" OR QID=""70028"" OR QID=""78049"", ""Pass"", ""Fail"") ] 
+    | eval asset_name=upper(asset_name) 
+    | stats values(index) as idxs, values(tracking_method) as tracking_method, values(Status) as Status by asset_name, asset_ip
+    | eventstats count(asset_name) as count_asset_name_one by asset_name 
+    | eventstats count(asset_ip) as count_asset_ip_one by asset_ip 
+    | eventstats count as count_asset_name_by_two by asset_name, idxs 
+    | eventstats count as count_asset_ip_by_two by asset_ip, idxs 
+    | eval mv=mvcount(idxs) 
+    | eval match_asset_name=if(mv<2 AND count_asset_name_one - count_asset_name_by_two >= 1, 1, 0) 
+    | eval match_asset_ip=if(mv<2 AND count_asset_ip_one - count_asset_ip_by_two >= 1, 1, 0) 
+    | eval full_match=if((match_asset_ip=1 OR mv=2 OR match_asset_name=1) ,1 ,0) 
+    | search idxs=mdlz_asset_inventory_cat1 OR mv=2 AND full_match=1 
+    | eval idxs=""Source 2"" ] 
+| stats values(idxs) as idxs, values(Status) as Status, values(tracking_method) as tracking_method by asset_name, asset_ip
+| eval match=if(UPPER(Status)=""PASS"" OR UPPER(tracking_method) LIKE ""%AGENT%"", 1, 0), spa_flag=case(match=1, ""false"", 1=1, ""true""), spa_identity=asset_name, spa_extra=case(match=1, ""Scanned for vulnerabilities through Authenticated remote or Agent local scans"", true(), ""NOT scanned for vulnerabilities through Authenticated remote or Agent local scans"")
+"
+03020102,"spa_03020102_workstationAuthenticatedVulnerabilityScan_search","`spa_assetInventoryData_macro` asset_status=ACTIVE asset_type=WORKSTATION earliest=-48h@h 
+| eval asset_ip=split(asset_ip, "" "")
+| mvexpand asset_ip 
+| union 
+    [| tstats summariesonly=t latest(Vulnerabilities.last_update_time) as last_update_time from datamodel=Vulnerabilities WHERE (earliest=-30d@d) sourcetype=""crowdstrike:falconhost:query:spotlight"" Vulnerabilities.hostname!=UNKNOWN by Vulnerabilities.hostname Vulnerabilities.dest 
+    | rename Vulnerabilities.hostname as asset_name, Vulnerabilities.dest as asset_ip 
+    | eval index=""Spotlight"" ] 
+| eval asset_name=upper(asset_name) 
+| stats values(index) as idxs by asset_name, asset_ip 
+| eventstats count(asset_name) as count_asset_name_one by asset_name 
+| eventstats count(asset_ip) as count_asset_ip_one by asset_ip 
+| eventstats count as count_asset_name_by_two by asset_name, idxs 
+| eventstats count as count_asset_ip_by_two by asset_ip, idxs 
+| eval mv=mvcount(idxs) 
+| eval match_asset_name=if(mv<2 AND count_asset_name_one - count_asset_name_by_two >= 1, 1, 0) 
+| eval match_asset_ip=if(mv<2 AND count_asset_ip_one - count_asset_ip_by_two >= 1, 1, 0) 
+| eval full_match=if((match_asset_ip=1 OR mv=2 OR match_asset_name=1) ,1 ,0) 
+| search idxs=mdlz_asset_inventory_cat1 OR mv=2 AND full_match=1 
+| eval idxs=""Source 1"", Status=""Pass"", tracking_method=""""
+| union 
+    [ search `spa_assetInventoryData_macro` asset_status=ACTIVE asset_type=WORKSTATION earliest=-48h@h 
+    | eval asset_ip=split(asset_ip, "" "") 
+    | mvexpand asset_ip 
+    | union 
+        [| tstats summariesonly=t latest(Vulnerabilities.last_update_time) as last_update_time, values(Vulnerabilities.spa_tracking_method) as tracking_method, values(Vulnerabilities.spa_qid) as QID from datamodel=Vulnerabilities WHERE (earliest=-30d@d) sourcetype=""qualys:hostDetection"" Vulnerabilities.hostname!=UNKNOWN by Vulnerabilities.hostname Vulnerabilities.dest 
+        | rename Vulnerabilities.hostname as asset_name, Vulnerabilities.dest as asset_ip 
+        | eval index=""Qualys"", Status=if(QID=""70053"" OR QID=""38307"" OR QID=""150007"" OR QID=""19129"" OR QID=""19648"" OR QID=""19844"" OR QID=""19907"" OR QID=""20032"" OR QID=""38668"" OR QID=""70028"" OR QID=""78049"", ""Pass"", ""Fail"") ] 
+    | eval asset_name=upper(asset_name) 
+    | stats values(index) as idxs, values(tracking_method) as tracking_method, values(Status) as Status by asset_name, asset_ip
+    | eventstats count(asset_name) as count_asset_name_one by asset_name 
+    | eventstats count(asset_ip) as count_asset_ip_one by asset_ip 
+    | eventstats count as count_asset_name_by_two by asset_name, idxs 
+    | eventstats count as count_asset_ip_by_two by asset_ip, idxs 
+    | eval mv=mvcount(idxs) 
+    | eval match_asset_name=if(mv<2 AND count_asset_name_one - count_asset_name_by_two >= 1, 1, 0) 
+    | eval match_asset_ip=if(mv<2 AND count_asset_ip_one - count_asset_ip_by_two >= 1, 1, 0) 
+    | eval full_match=if((match_asset_ip=1 OR mv=2 OR match_asset_name=1) ,1 ,0) 
+    | search idxs=mdlz_asset_inventory_cat1 OR mv=2 AND full_match=1 
+    | eval idxs=""Source 2"" ] 
+| stats values(idxs) as idxs, values(Status) as Status, values(tracking_method) as tracking_method by asset_name, asset_ip
+| eval match=if(UPPER(Status)=""PASS"" OR UPPER(tracking_method) LIKE ""%AGENT%"", 1, 0), spa_flag=case(match=1, ""false"", 1=1, ""true""), spa_identity=asset_name, spa_extra=case(match=1, ""Scanned for vulnerabilities through Authenticated remote or Agent local scans"", true(), ""NOT scanned for vulnerabilities through Authenticated remote or Agent local scans"")
+"
+03020103,"spa_03020103_networkAuthenticatedVulnerabilityScan_search","| tstats summariesonly=t count as count from datamodel=Performance WHERE (earliest=-48h@h) AND sourcetype=""solarwinds:alerts"" by All_Performance.dest 
+| rename All_Performance.dest as asset_ip
+| eval index=""Source 1""
+| union 
+    [| tstats summariesonly=t latest(Vulnerabilities.last_update_time) as last_update_time, values(Vulnerabilities.spa_qid) as QID from datamodel=Vulnerabilities WHERE (earliest=-30d@d) sourcetype=""qualys:hostDetection"" by Vulnerabilities.dest
+    | rename Vulnerabilities.dest as asset_ip 
+    | eval index=""Source 2"", Status=if(QID=""70053"" OR QID=""38307"" OR QID=""150007"" OR QID=""19129"" OR QID=""19648"" OR QID=""19844"" OR QID=""19907"" OR QID=""20032"" OR QID=""38668"" OR QID=""70028"" OR QID=""78049"", ""Pass"", ""Fail"") ]
+| stats values(index) as idxs, values(Status) as Status by asset_ip
+| where mvcount(idxs)>1
+| eval match=if(UPPER(Status)=""PASS"", 1, 0), spa_flag=case(match=1, ""false"", 1=1, ""true""), spa_identity=asset_ip, spa_extra=case(match=1, ""Scanned for vulnerabilities through Authenticated remote or Agent local scans"", true(), ""NOT scanned for vulnerabilities through Authenticated remote or Agent local scans"")
+"
+03020104,"spa_03020104_mobileAuthenticatedVulnerabilityScan_search","index=zero
+`spa_comment_macro(""EODS"")`
+"
+03030101,"spa_03030101_serverDedicatedAccountVulnerabilityScan_search","(`spa_assetInventoryData_macro` asset_type=Server AND asset_status=ACTIVE) earliest=-24h@h | fields asset_ip asset_name | table asset_ip asset_name | eval asset_name=upper(asset_name)
+| join type=left asset_name 
+[| tstats values(Authentication.dest) as dest from datamodel=Authentication.Authentication WHERE Authentication.action=success (Authentication.signature_id=4624 OR Authentication.signature_id=4672) Authentication.user=""s-*"" earliest=-5d@d latest=@d by Authentication.user
+| rename dest as asset_name
+| mvexpand asset_name
+| eval asset_name=upper(asset_name)
+| rex  field=asset_name mode=sed ""s/\..*$//""
+| join type=inner [search index=qualys_cat2 tag::eventtype=user user=""s-*"" earliest=-48h@h | rex  field=user mode=sed ""s/\@.*$//"" | fields user]]
+`spa_comment_macro(""EODS"")`
+| table asset_name user
+| eval spa_flag=if(isnotnull(asset_name) AND isnotnull(user), ""false"", ""true""), spa_identity=asset_name, spa_extra=if(spa_flag=""false"", ""Scanned for vulnerabilities"", ""NOT scanned for vulnerabilities"")
+
+"
+03030102,"spa_03030102_workstationDedicatedAccountVulnerabilityScan_search","index=fake
+`spa_comment_macro(""EODS"")`
+"
+03030103,"spa_03030103_networkDedicatedAccountVulnerabilityScan_search","(`spa_networkInventoryData_macro`  earliest=-48h@h latest=now IP_Address=*) OR 
+(`spa_assetInventoryData_macro` source=""Qualys_authentication_Scanned_Cisco_Devices_status_mndee_av_20200427.csv"" earliest=-300d latest=now Status=Pass)
+| eval extracted_Host=trim(upper(extracted_Host), "" "")
+| eval IP_Address=trim(upper(IP_Address), "" "")
+| eval IP_Address=if(isnull(IP_Address),extracted_Host,IP_Address)
+| stats values(index) as val_ by IP_Address
+| eval mv_count= mvcount(val_)
+| search mv_count=2 OR val_=mdlz_network_solarwinds_cat1
+| join type=left [| tstats values(Vulnerabilities.last_scan_time) as update_time from datamodel=Vulnerabilities.Vulnerabilities WHERE (earliest=-30d@d) by Vulnerabilities.dest
+    | rename Vulnerabilities.dest as IP_Address
+    | table IP_Address update_time]
+| eval spa_flag=if(mv_count=2, if(isnotnull(update_time), ""false"", ""true""), ""true""), spa_identity=IP_Address, spa_extra=case(mv_count=2, ""Scanned for vulnerabilities"", true(), ""NOT scanned for vulnerabilities"")
+"
+03030104,"spa_03030104_mobileDedicatedAccountVulnerabilityScan_search","index=fake
+`spa_comment_macro(""EODS"")`
+"
+03030201,"spa_03030201_vmDedicatedAccountsSharing_search","| tstats values(Authentication.user) as user from datamodel=Authentication.Authentication WHERE Authentication.action=success earliest=-5d@d latest=@d by Authentication.src 
+| mvexpand user
+| rex  field=user mode=sed ""s/\@.*$//""
+| eval authentication=1, user=upper(user)
+| append [ search index=qualys_cat2 (sourcetype=qualys_scan_appliance OR tag::eventtype=user) earliest=-7d@d
+ | eval ""APPLIANCE.NAME""=upper('APPLIANCE.NAME'), assets=(""scan_hosts: "".'APPLIANCE.INTERFACE_SETTINGS.IP_ADDRESS'."" "".'APPLIANCE.NAME')
+ | stats values(user) as user values(assets) as scan_hosts
+ | rex  field=user mode=sed ""s/\@.*$//""
+ | mvexpand user
+ | eval vm_scan=1, user=upper(user) ]
+`spa_comment_macro(""EODS"")`
+| stats values(vm_scan) as vm_scan, values(authentication) as authentication, values(Authentication.src) as src values(scan_hosts) as scan_hosts by user
+| search vm_scan=1
+| fillnull src value=""N/A""
+| mvexpand src
+| dedup user
+| eval spa_flag=if(isnotnull(vm_scan) AND isnotnull(authentication) AND !like(scan_hosts, ""%"".src.""%""), ""true"", ""false""), spa_identity=user, spa_extra=if(spa_flag=""false"", ""Account is used only for scans"", ""Account has additional login activity"")
+"
+03040101,"spa_03040101_serverAutomatedPatching_search","index=zero
+`spa_comment_macro(""EODS"")`
+"
+03040102,"spa_03040102_workstationAutomatedPatching_search","(`spa_assetInventoryData_macro` asset_status=ACTIVE asset_type=workstation earliest=-48h@h latest=@d) OR (`spa_assetInventoryData_macro` sourcetype=sccm_sn earliest=-7d@d latest=@d)
+`spa_comment_macro(""EODS"")` 
+| eval asset_name=trim(upper(asset_name), "" ""), asset_sn=trim(upper(asset_sn), "" ""), Name=trim(upper(Name), "" ""), Number=trim(upper(Number), "" ""), asset_name=if(isnull(asset_name), Name, asset_name), asset_sn=if(isnull(asset_sn), Number, asset_sn)
+| stats values(index) as idxs by asset_name, asset_sn
+| eventstats count(asset_name) as count_asset_name_one by asset_name
+| eventstats count as count_asset_name_by_two by asset_name, idxs 
+| eventstats count(asset_sn) as count_asset_sn_one by asset_sn 
+| eventstats count as count_asset_sn_by_two by asset_sn, idxs
+| eval mv_count=mvcount(idxs), match_asset_name=if(mv_count<2 AND count_asset_name_one - count_asset_name_by_two >= 1, 1, 0), match_asset_sn=if(mv_count<2 AND count_asset_sn_one - count_asset_sn_by_two >= 1, 1, 0), full_match=if((match_asset_sn=1 OR mv_count=2 OR match_asset_name=1) ,1 ,0 )
+| search idxs=mdlz_asset_inventory_cat1 OR mv_count=2
+| eval spa_flag=case(full_match=1, ""false"", 1=1, ""true""), spa_identity=if((full_match=1 AND match_asset_sn=1), asset_sn, asset_name), spa_extra=if((full_match=0), ""No Match"", if((full_match=1 AND match_asset_name>=match_asset_sn), ""match by asset_name"", ""match by asset_sn""))
+"
+03040103,"spa_03040103_networkAutomatedPatching_search","index=zero
+`spa_comment_macro(""EODS"")`
+"
+03040104,"spa_03040104_mobileAutomatedPatching_search","index=zero
+`spa_comment_macro(""EODS"")`
+"
+03050101,"spa_03050101_workstationAutomatedDeployment_search","index=zero
+`spa_comment_macro(""EODS"")`
+"
+03050102,"spa_03050102_serverAutomatedDeployment_search","index=zero
+`spa_comment_macro(""EODS"")`
+"
+03060101,"spa_03060101_serverClosedVulnerabilities_search","| tstats values(Vulnerabilities.dest) as asset_ip from datamodel=Vulnerabilities.Vulnerabilities WHERE Vulnerabilities.status=FIXED Vulnerabilities.spa_tags=*windows* OR Vulnerabilities.spa_tags=""*linux*"" OR Vulnerabilities.spa_tags=Server (earliest=-60d@d) by Vulnerabilities.hostname, Vulnerabilities.cve, Vulnerabilities.first_found_time, Vulnerabilities.fixed_time, Vulnerabilities.spa_qid, Vulnerabilities.spa_port
+| rename Vulnerabilities.cve as CVE, Vulnerabilities.first_found_time as Opened, Vulnerabilities.fixed_time as Closed, Vulnerabilities.spa_qid as QID, Vulnerabilities.spa_port as Port, Vulnerabilities.hostname as hostname
+| eval days = round((now()-strptime(Closed, ""%Y-%m-%d""))/86400,1)
+| search days<=30
+| join type=left asset_ip [ search `spa_assetInventoryData_macro` asset_type=Server asset_status=ACTIVE earliest=-24h@h | fields asset_ip asset_name asset_type
+| eval asset_ip=split(asset_ip,"" "")
+| fillnull value=Unknown asset_ip
+| mvexpand asset_ip | rex field=asset_name mode=sed ""s/\..*$//""
+| eval asset_name=upper(asset_name)
+| stats values(asset_ip) as asset_ip, values(asset_type) as asset_type by asset_name]
+`spa_comment_macro(""EODS"")` 
+| search asset_type=Server
+| stats values(asset_ip) as asset_ip, values(Opened) as Opened, values(Closed) as Closed, values(Port) as Port by asset_name, QID, CVE
+| eval CVE=split(CVE,"", "")
+| mvexpand CVE
+| eval spa_flag=if(floor((strptime(Closed, ""%Y-%m-%d"") - strptime(Opened, ""%Y-%m-%d"")) / 86400) >= 60, ""true"", ""false""), spa_identity=case(isnotnull(asset_name), asset_name, isnull(asset_name), hostname, 1=1, ""Unknown""), spa_extra=(""HOST: "".spa_identity+"", QID: "".QID+"", Port: "".Port+"", CVE: "".CVE)
+"
+03060102,"spa_03060102_workstationClosedVulnerabilities_search","| tstats values(Vulnerabilities.dest) as asset_ip from datamodel=Vulnerabilities.Vulnerabilities WHERE Vulnerabilities.status=FIXED Vulnerabilities.spa_tags=""*Tag-EUC-Agent*"" OR Vulnerabilities.spa_tags=Workstation (earliest=-60d@d) by Vulnerabilities.hostname, Vulnerabilities.cve, Vulnerabilities.first_found_time, Vulnerabilities.fixed_time, Vulnerabilities.spa_qid, Vulnerabilities.spa_port
+| rename Vulnerabilities.cve as CVE, Vulnerabilities.first_found_time as Opened, Vulnerabilities.fixed_time as Closed, Vulnerabilities.spa_qid as QID, Vulnerabilities.spa_port as Port, Vulnerabilities.hostname as hostname
+| eval days = round((now()-strptime(Closed, ""%Y-%m-%d""))/86400,1)
+| search days<=30
+| join type=left asset_ip [ search `spa_assetInventoryData_macro` asset_type=Workstation asset_status=ACTIVE earliest=-24h@h | fields asset_ip asset_name asset_type
+| eval asset_ip=split(asset_ip,"" "")
+| fillnull value=Unknown asset_ip
+| mvexpand asset_ip | rex field=asset_name mode=sed ""s/\..*$//""
+| eval asset_name=upper(asset_name)
+| stats values(asset_ip) as asset_ip, values(asset_type) as asset_type by asset_name]
+`spa_comment_macro(""EODS"")` 
+| search asset_type=Workstation
+| stats values(asset_ip) as asset_ip, values(Opened) as Opened, values(Closed) as Closed, values(Port) as Port by asset_name, QID, CVE
+| eval CVE=split(CVE,"", "")
+| mvexpand CVE
+| eval spa_flag=if(floor((strptime(Closed, ""%Y-%m-%d"") - strptime(Opened, ""%Y-%m-%d"")) / 86400) >= 60, ""true"", ""false""), spa_identity=case(isnotnull(asset_name), asset_name, isnull(asset_name), hostname, 1=1, ""Unknown""), spa_extra=(""HOST: "".spa_identity+"", QID: "".QID+"", Port: "".Port+"", CVE: "".CVE)
+"
+03060103,"spa_03060103_networkClosedVulnerabilities_search","| tstats summariesonly=t  values(Vulnerabilities.dest) as asset_ip from datamodel=Vulnerabilities.Vulnerabilities WHERE (earliest=-60d@d) Vulnerabilities.spa_tags=""*Network*"" Vulnerabilities.status=FIXED by Vulnerabilities.cve, Vulnerabilities.first_found_time, Vulnerabilities.fixed_time, Vulnerabilities.spa_qid, Vulnerabilities.spa_port, Vulnerabilities.hostname
+| rename Vulnerabilities.cve as CVE, Vulnerabilities.first_found_time as Opened, Vulnerabilities.fixed_time as Closed, Vulnerabilities.spa_qid as QID, Vulnerabilities.spa_port as Port, Vulnerabilities.hostname as hostname
+| eval days = round((now()-strptime(Closed, ""%Y-%m-%d""))/86400,1)
+| search days<=30
+| table CVE Opened Closed QID Port hostname asset_ip 
+|  join type=left asset_ip [| search `spa_networkInventoryData_macro` earliest=-24h@h | fields IPAddress IP_Address NAS_IP_Address IP_Address host_name NodeName PeerName asset_ip hostnames
+| eval IP_Address=coalesce(IPAddress, IP_Address)
+| eval asset_ip=if(isnull(NAS_IP_Address),  IP_Address, ""unknown"")
+| eval hostnames=if(isnull(host_name), NodeName, PeerName)
+| stats values(hostnames) as hostnames by asset_ip
+| where isnotnull(asset_ip) AND isnotnull(hostnames)
+| table asset_ip hostnames]
+`spa_comment_macro(""EODS"")`
+| where isnotnull(hostnames)
+| stats values(hostnames) as hostnames, values(CVE) as CVE, values(Opened) as Opened, values(Closed) as Closed, values(QID) as QID, values(Port) as Port by asset_ip
+| eval CVE=split(CVE,"", "")
+| mvexpand CVE
+| eval spa_flag=if(floor((strptime(Closed, ""%Y-%m-%d"") - strptime(Opened, ""%Y-%m-%d"")) / 86400) >= 60, ""true"", ""false""), spa_identity=case(isnotnull(hostnames), hostnames, isnull(hostnames), hostname, 1=1, ""Unknown""), spa_extra=(""HOST: "".spa_identity+"", QID: "".QID+"", Port: "".Port)
+"
+03070101,"spa_03070101_serverVulnerabilityRisk_search","| tstats values(Vulnerabilities.severity) as severity, values(Vulnerabilities.first_found_time) as first_found_time, values(Vulnerabilities.spa_tags) as TAGS FROM datamodel=Vulnerabilities.Vulnerabilities WHERE earliest=-24h@h (sourcetype=qualys:wasFindings OR sourcetype=qualys:hostDetection) (Vulnerabilities.category=CONFIRMED OR Vulnerabilities.category=POTENTIAL OR Vulnerabilities.category=VULNERABILITY) Vulnerabilities.status!=FIXED by Vulnerabilities.hostname, Vulnerabilities.severity, Vulnerabilities.spa_qid, Vulnerabilities.spa_port, Vulnerabilities.dest
+`spa_comment_macro(""EODS"")`
+| rename Vulnerabilities.severity as severity, Vulnerabilities.spa_qid as QID, Vulnerabilities.spa_port as PORT, Vulnerabilities.hostname as hostname, Vulnerabilities.dest as dest
+| eval days_since_found = floor((now() - strptime(first_found_time, ""%Y-%m-%d"")) / 86400)
+| search days_since_found <= 30
+| eval severity=case(severity=""informational"", 1, severity=""low"", 2, severity=""medium"", 3, severity=""high"", 4, severity=""critical"", 5)
+| lookup qualys_kb_lookup QID as QID OUTPUT CVSS_EXPLOITABILITY
+| mvexpand CVSS_EXPLOITABILITY
+| eval Asset_Criticality = if(like(TAGS,""%Critical Apps%""),""6"",""5"")
+| eval CVSS_EXPLOITABILITY=if(sourcetype=""qualys:wasFindings"", 2, CVSS_EXPLOITABILITY)
+| eval Risk = Asset_Criticality * severity * (CVSS_EXPLOITABILITY + 15)
+| eval check_AC=if(isnull(Asset_Criticality), 0, 1), check_S=if(isnull(severity), 0, 1)
+| eval spa_flag=if(check_AC+check_S=2, ""false"", ""true""), spa_identity=hostname, spa_extra=(""IP:"".dest+"", QID:"".QID+"", PORT: "".PORT)
+"
+04010101,"spa_04010101_azurePrivilegedAccountInventory_search","index=non_existent
+`spa_comment_macro(""EODS"")`
+"
+04010201,"spa_04010201_adPrivilegedAccountInventory_search","index=non_existent
+`spa_comment_macro(""EODS"")`
+"
+04010301,"spa_04010301_serverPrivilegedAccountInventory_search","index=non_existent
+`spa_comment_macro(""EODS"")`
+"
+04010302,"spa_04010302_workstationPrivilegedAccountInventory_search","index=non_existent
+`spa_comment_macro(""EODS"")`
+"
+04020101,"spa_04020101_defaultCredentials_search","(`spa_vulnerabilityData_macro` QID IN (43021, 90081, 19008, 87098, 11804) earliest=-30d@d)
+`spa_comment_macro(""EODS"")`
+| eval chrono=_time.STATUS
+| stats values(chrono) as chrono by NETBIOS QID
+| eval chrono=mvjoin(chrono, """")
+| rex mode=sed field=chrono ""s/\d*/""""/g"" max_match=0
+| eval pre_match=if(UPPER(chrono) LIKE ""%FIXED"", 0, 1)
+| eventstats max(pre_match) as match
+| eval spa_flag=case(match=0, ""false"", 1=1, ""true""), spa_identity=NETBIOS, spa_extra=case(pre_match=1, ""Hostname with "".chrono."" vulnerability QID - "".QID, true(), ""Hostname with FIXED vulnerability QID - "".QID)
+"
+04030101,"spa_04030101_adminAccountsWithNormalAccounts_search","`spa_identityInventoryData_macro` account_name=* account_status=ACTIVE earliest=-7d@d latest=@d
+`spa_comment_macro(""EODS"")`
+| eval account_name=upper(account_name)
+| rex max_match=0 field=account_name ""(?<Prefix>^[(P|A)])-(?<LANID>[^.]*)""
+| eval AccName=if(account_name LIKE ""A-%"" OR account_name LIKE ""P-%"", LANID, account_name)
+| stats count as CNT, count(LANID) as LANID_CNT, values(Prefix) as Prefix by AccName 
+| search (Prefix=""A"" OR Prefix=""P"")
+| mvexpand Prefix
+| eval match=if(CNT>1, 1, 0) 
+| eval spa_flag=case(match=1, ""false"", 1=1, ""true""), spa_identity=AccName, spa_extra=case(match=1, ""Privileged Account has normal LanID"", true(), ""Privileged Account does NOT have normal LanID"")
+"
+04050101,"spa_04050101_criticalServicesWithMFA_search","`spa_assetInventoryData_macro` earliest=-300d@d latest=now source=""SNow_cmdb_ci_Business_Services_Prod_Operational_04050101.csv""
+`spa_comment_macro(""EODS"")`
+| eval MFA_mark=if(like(name, ""%365%""), ""1"", ""0"")
+| eval spa_flag=case(MFA_mark=1, ""false"", 1=1, ""true""), spa_identity=name
+| eval spa_extra=if(MFA_mark=1, (""covered by MFA""), (""without MFA""))
+"
+04050201,"spa_04050201_privilegedАccountsWithMFA_search","| tstats summariesonly=t count FROM datamodel=Compute_Inventory WHERE (earliest=-10d@d latest=-0d@d)  AND All_Inventory.description=""MS Active Directory Inventory""
+    AND All_Inventory.User.user_id=""A-*""
+    BY All_Inventory.User.user_id, All_Inventory.User.spa_mfa_enabled, All_Inventory.enabled, _time
+| rename All_Inventory.User.user_id as user_id, All_Inventory.User.spa_mfa_enabled as spa_mfa_enabled, All_Inventory.enabled as enabled
+| eventstats max(_time) as latest_date
+| eval latest_date=strptime(strftime(latest_date, ""%Y%m%d""), ""%Y%m%d"")
+| where _time=latest_date AND enabled=""true""
+| eval match=if(spa_mfa_enabled=""true"", 1, 0)
+| eval spa_flag=case(match=1, ""false"", 1=1, ""true""), spa_identity=user_id, spa_extra=if(match=1, ""Has MFA"", ""Does not have MFA"")
+"
+04060101,"spa_04060101_privilegedAccountsUsingPSM_search","index=zero
+`spa_comment_macro(""EODS"")`
+"
+04060201,"spa_04060201_privilegedAccountsInPAM_search","| tstats summariesonly=t values(Root.account_name) as account_name from datamodel=Privilege.Root where Root.is_ActiveDirectory=1 Root.account_status=""ACTIVE"" earliest=-7d@d latest=@d
+| mvexpand account_name 
+| eval src=""AD""
+| union
+    [ | tstats summariesonly=t values(Root.account_name) as account_name from datamodel=Privilege.Root where Root.is_CyberArk=1 Root.account_status=""ACTIVE"" earliest=-48h@h
+    | mvexpand account_name 
+    | eval src=""CyberArk"" ]
+`spa_comment_macro(""EODS"")`
+| stats values(src) as src by account_name
+| eval match=if(mvcount(src)>1, 1, 0)
+| where src=""AD""
+| eval spa_flag=case(match=1, ""false"", 1=1, ""true""), spa_identity=account_name, spa_extra=case(match=1, ""AD user managed by CyberArk"", true(), ""AD user NOT managed by CyberArk"")
+"
+04080101,"spa_04080101_adminGroupMembershipMonitoring_search","| inputlookup spa_monitoredAuthorizationSystems_lookup
+`spa_comment_macro(""EODS"")`
+| eval spa_flag=if('Monitored Authorization Systems' == 'All Authorization Systems', ""false"", ""true""), spa_identity='All Authorization Systems', spa_extra=if(spa_flag=""false"",""Use case implemented."", ""No use case implemented."")
+"
+04090101,"spa_04090101_failedLogins_search","index=imaginery
+`spa_comment_macro(""EODS"")`
+"
+06020101,"spa_06020101_serverLogManagement_search","| tstats count FROM datamodel=Compute_Inventory WHERE (earliest=-3d@d)
+    AND All_Inventory.description=""MDLZ Asset Inventory""
+    AND All_Inventory.status=""ACTIVE""
+    AND All_Inventory.enabled =""true""
+    AND All_Inventory.Custom_Inventory.spa_network_segment IN (""IT"", ""OT"")
+    AND All_Inventory.family =""Server""
+    AND All_Inventory.Custom_Inventory.spa_system_status=""Operation""
+    AND All_Inventory.Custom_Inventory.spa_system_type IN (""Server"", ""VM"", ""Cluster Node"")
+    BY All_Inventory.dest, All_Inventory.Network.ip, _time span=1h
+    `spa_comment_macro(""EODS"")`
+| eventstats max(_time) as latest_date
+| eval latest_date=strptime(strftime(latest_date, ""%Y%m%d""), ""%Y%m%d"")
+| where _time>=latest_date
+| rename All_Inventory.dest as dest, All_Inventory.Network.ip as ip
+| fields dest, ip
+| eval ip=split(ip,"" "")
+| eval joinid=mvappend(dest, ip)
+| mvexpand joinid
+| join type=left joinid
+    [| tstats summariesonly=t count from datamodel=Event_Signatures.Signatures WHERE (earliest=-48h@h) by Signatures.dest, Signatures.spa_dest
+    | eval joinid=lower('Signatures.spa_dest'), logs=1
+        ]
+| stats count(logs) as count_matches by dest
+| eval match=if(count_matches>0, 1, 0)
+| eval spa_flag=case(match=1, ""false"", 1=1, ""true""), spa_identity=dest
+| eval spa_extra=if(match=1, ""The server sends logs"", ""The server doesn't send logs"")
+"
+06020102,"spa_06020102_workstationLogManagement_search","| tstats count FROM datamodel=Compute_Inventory WHERE (earliest=-3d@d)
+    AND All_Inventory.description=""MDLZ Asset Inventory""
+    AND All_Inventory.status=""ACTIVE""
+    AND All_Inventory.enabled =""true""
+    AND All_Inventory.Custom_Inventory.spa_network_segment IN (""IT"", ""OT"")
+    AND All_Inventory.family =""Workstation""
+    BY All_Inventory.dest, All_Inventory.Network.ip, _time span=1h
+    `spa_comment_macro(""EODS"")`
+| eventstats max(_time) as latest_date
+| eval latest_date=strptime(strftime(latest_date, ""%Y%m%d""), ""%Y%m%d"")
+| where _time>=latest_date
+| rename All_Inventory.dest as dest, All_Inventory.Network.ip as ip
+| fields dest, ip
+| eval ip=split(ip,"" "")
+| eval joinid=mvappend(dest, ip)
+| mvexpand joinid
+| join type=left joinid
+    [| tstats summariesonly=t count from datamodel=Event_Signatures.Signatures WHERE (earliest=-48h@h) by Signatures.dest, Signatures.spa_dest
+    | eval joinid=lower('Signatures.spa_dest'), logs=1
+        ]
+| stats count(logs) as count_matches by dest
+| eval match=if(count_matches>0, 1, 0)
+| eval spa_flag=case(match=1, ""false"", 1=1, ""true""), spa_identity=dest
+| eval spa_extra=if(match=1, ""The workstation sends logs"", ""The workstation doesn't send logs"")
+"
+06020103,"spa_06020103_networkDeviceLogManagement_search","| tstats count as count_ from datamodel=Hardware_Asset_Inventory.HardwareAssetInventory WHERE (earliest=-7d@d latest=@d)
+    AND HardwareAssetInventory.Network_Function IN (""Core Switch"", ""Access Switch"", ""Wireless LAN Controller"", ""Firewall"")
+    AND HardwareAssetInventory.Status=""Up""
+    by HardwareAssetInventory.Serial, HardwareAssetInventory.IP_Address
+    `spa_comment_macro(""EODS"")`
+| rename HardwareAssetInventory.Serial as serail, HardwareAssetInventory.IP_Address as ip
+| fields serail, ip
+| eval joinid=mvappend(serail, ip)
+| mvexpand joinid
+| join type=left joinid
+    [| tstats summariesonly=t count from datamodel=Event_Signatures.Signatures WHERE (earliest=-48h@h) by Signatures.dest, Signatures.spa_dest
+    | eval joinid=lower('Signatures.spa_dest'), logs=1
+        ]
+| stats count(logs) as count_matches by serail
+| eval match=if(count_matches>0, 1, 0)
+| eval spa_flag=case(match=1, ""false"", 1=1, ""true""), spa_identity=serail
+| eval spa_extra=if(match=1, ""The network device sends logs"", ""The network device doesn't send logs"")
+    "
+06030101,"spa_06030101_serverDetailedLogging_search","`spa_assetInventoryData_macro` AND asset_type=Server AND asset_status=ACTIVE earliest=-24h@h
+`spa_comment_macro(""EODS"")`
+| eval asset_ip=split(asset_ip,"" ""), asset_name=upper(asset_name)
+| table asset_name, asset_ip
+| eval joinid=mvappend(asset_name, asset_ip)
+| mvexpand joinid
+| join type=left joinid
+    [| tstats summariesonly=t values(Authentication.src) as source, values(Authentication.user) as user, values(host) as hostname, latest(_time) as time from datamodel=Authentication.Authentication WHERE (earliest=-2d@d latest=@d) by Authentication.dest
+    | rex field=Authentication.dest mode=sed ""s/\.[^\d]+$//""
+    | rename Authentication.dest as joinid
+    | table joinid, source, user, time, hostname]
+`spa_comment_macro(""EODS"")`
+| eval c1=if(isnull(joinid),1,0), c2=if(isnull(source),1,0), c3=if(isnull(user),1,0), c4=if(isnull(hostname),1,0), c5=if(isnull(time),1,0), check=if(c1+c2+c3+c4+c5=0, 1, 0)
+| eval spa_flag=if(check=1, ""false"", ""true""), spa_identity=asset_name, spa_extra=""Missing Fields: "".if(c1=1,""asset_name, "","""").if(c2=1,""source, "","""").if(c3=1,""user, "","""").if(c4=1,""hostname, "","""").if(c5=1,""time"","""").if(check=1, "" None"", """")
+"
+06030102,"spa_06030102_workstationDetailedLogging_search","`spa_assetInventoryData_macro` earliest=-24h@h AND asset_type=Workstation AND asset_status=ACTIVE
+| eval asset_ip=split(asset_ip,"" ""), asset_name=upper(asset_name)
+| table asset_name, asset_ip
+| eval joinid=mvappend(asset_name, asset_ip)
+| mvexpand joinid
+| join type=left joinid
+    [| tstats summariesonly=t values(Authentication.src) as source, values(Authentication.user) as user, values(host) as hostname, latest(_time) as time from datamodel=Authentication.Authentication WHERE (earliest=-2d@d latest=@d) by Authentication.dest
+    | rex field=Authentication.dest mode=sed ""s/\.[^\d]+$//""
+    | rename Authentication.dest as joinid
+    | table joinid, source, user, time hostname]
+`spa_comment_macro(""EODS"")`
+| eval c1=if(isnull(joinid),1,0), c2=if(isnull(source),1,0), c3=if(isnull(user),1,0), c4=if(isnull(hostname),1,0), c5=if(isnull(time),1,0), check=if(c1+c2+c3+c4+c5=0, 1, 0)
+| eval spa_flag=if(check=1, ""false"", ""true""), spa_identity=asset_name, spa_extra=""Missing Fields: "".if(c1=1,""asset_name, "","""").if(c2=1,""source, "","""").if(c3=1,""user, "","""").if(c4=1,""hostname, "","""").if(c5=1,""time"","""").if(check=1, "" None"", """")
+"
+06030103,"spa_06030103_networkDetailedLogging_search","(`spa_networkInventoryData_macro`) earliest=-24h@h AND sourcetype=""solarwinds:generic"" AND source=""solwarwinds_query://solarwinds_all_regions""
+`spa_comment_macro(""EODS"")`
+`spa_comment_macro(""EODS"")`
+"
+06040101,"spa_06040101_indexRetentionPolicy_search","| rest splunk_server=*IDX* /services/data/indexes 
+| join type=outer title 
+    [| rest splunk_server=*IDX* /services/data/inputs/all
+| where 'eai:acl.app'=""TA-throw-away""]
+| where like (title,""mdlz%"") OR like (title,""qualys%"")
+| fields title frozenTimePeriodInSecs retention_period
+| dedup title
+`spa_comment_macro(""EODS"")`
+| eval retentionInDays=frozenTimePeriodInSecs/86400, archive_retentionInDays=retention_period/86400, archive_retentionInDays=if(isnull(archive_retentionInDays),""0"",archive_retentionInDays), total=retentionInDays+archive_retentionInDays
+| eval spa_flag = if(total > 365, ""false"", ""true""), spa_identity=title, spa_extra=(""Retention Days Before Archiving: "".retentionInDays+"", Retention Days Before Deletion: "".archive_retentionInDays)
+"
+06050101,"spa_06050101_serverCentralLogManagement_search","(`spa_assetInventoryData_macro`) earliest=-24h@h AND asset_type=Server AND asset_status=ACTIVE
+`spa_comment_macro(""EODS"")`
+| eval match = if(syslog_activity_time>relative_time(now(),""-2d@d""), 1 , 0)
+| eval spa_flag=case(match=""1"", ""false"", 1=1, ""true""), spa_identity=asset_name
+| eval spa_extra=if((match=""1""), ""configured to send logs to a central log management system"", ""NOT configured to send logs to a central log management system"")
+"
+06050102,"spa_06050102_workstationCentralLogManagement_search","(`spa_assetInventoryData_macro`) earliest=-24h@h AND asset_type=Workstation AND asset_status=ACTIVE
+`spa_comment_macro(""EODS"")`
+| eval match = if(syslog_activity_time>relative_time(now(),""-2d@d""), 1 , 0)
+| eval spa_flag=case(match=""1"", ""false"", 1=1, ""true""), spa_identity=asset_name
+| eval spa_extra=if((match=""1""), ""configured to send logs to a central log management system"", ""NOT configured to send logs to a central log management system"")
+"
+06050103,"spa_06050103_networkCentralLogManagement_search","(`spa_networkInventoryData_macro`) earliest=-24h@h AND sourcetype=""solarwinds:generic"" AND source=""solwarwinds_query://solarwinds_all_regions""
+`spa_comment_macro(""EODS"")`
+| eval match = if(syslog_activity_time>relative_time(now(),""-2d@d""), 1 , 0)
+| eval spa_flag=case(match=""1"", ""false"", 1=1, ""true""), spa_identity=IP_Address
+| eval spa_extra=if((match=""1""), ""configured to send logs to a central log management system"", ""NOT configured to send logs to a central log management system"")
+"
+06060101,"spa_06060101_serverSecurityLogManagement_search","`spa_assetInventoryData_macro`  AND asset_type=Server AND asset_status=ACTIVE earliest=-24h@h
+`spa_comment_macro(""EODS"")`
+| table asset_name, asset_ip
+| eval asset_ip=split(asset_ip,"" "")
+| table asset_name, asset_ip
+| eval joinid=mvappend(asset_name, asset_ip)
+| mvexpand joinid
+| join type=left joinid
+   [ | tstats summariesonly=t values(Signatures.signature_id) as signature_id from datamodel=Event_Signatures.Signatures WHERE (earliest=-48h@h) by Signatures.dest, sourcetype
+| eval dest=lower('Signatures.dest')
+| rex field=dest ""(?P<dest>.+)\n?""
+| rex field=dest mode=sed ""s/\..[a-zA-Z].*//""
+| rex field=dest mode=sed ""s/\$//""
+| mvexpand signature_id
+| eval signature_id_win=if(sourcetype=""linux_secure"", ""linux555"", signature_id)
+| search signature_id_win IN (""4624"", ""4625"", ""4634"", ""4648"", ""4719"", ""4964"", ""1102"", ""4720"", ""4722"", ""4723"", ""4725"", ""4728"", ""4732"", ""4756"", ""4738"",
+""4740"", ""4767"", ""4735"", ""4737"", ""4755"", ""4772"", ""4777"", ""4782"", ""4616"", ""4657"", ""4697"", ""4698"", ""4699"", ""4700"", ""4701"",
+""4702"", ""4946"", ""4947"", ""4950"", ""4954"", ""5025"", ""5031"", ""5152"", ""5153"", ""5155"", ""5157"", ""5447"", ""linux555"")
+| eval security_logs=1
+| rename dest as joinid
+| dedup joinid
+| table joinid, security_logs]
+| stats count(security_logs) as count_matches by asset_name
+| eval match=if(count_matches>0, 1, 0)
+| eval spa_flag=case(match=1, ""false"", 1=1, ""true""), spa_identity=asset_name
+| eval spa_extra=if(match=1, ""The server sends security logs"", ""The server doesn't send security logs"")
+"
+06060102,"spa_06060102_workstationSecurityLogManagement_search","`spa_assetInventoryData_macro`  AND asset_type=Workstation AND asset_status=ACTIVE earliest=-24h@h
+`spa_comment_macro(""EODS"")`
+| table asset_name, asset_ip
+| eval asset_ip=split(asset_ip,"" "")
+| table asset_name, asset_ip
+| eval joinid=mvappend(asset_name, asset_ip)
+| mvexpand joinid
+| join type=left joinid
+   [ | tstats summariesonly=t values(Signatures.signature_id) as signature_id from datamodel=Event_Signatures.Signatures WHERE (earliest=-48h@h) by Signatures.dest, sourcetype
+| eval dest=lower('Signatures.dest')
+| rex field=dest ""(?P<dest>.+)\n?""
+| rex field=dest mode=sed ""s/\..[a-zA-Z].*//""
+| rex field=dest mode=sed ""s/\$//""
+| mvexpand signature_id
+| eval signature_id_win=if(sourcetype=""linux_secure"", ""linux555"", signature_id)
+| search signature_id_win IN (""4624"", ""4625"", ""4634"", ""4648"", ""4719"", ""4964"", ""1102"", ""4720"", ""4722"", ""4723"", ""4725"", ""4728"", ""4732"", ""4756"", ""4738"",
+""4740"", ""4767"", ""4735"", ""4737"", ""4755"", ""4772"", ""4777"", ""4782"", ""4616"", ""4657"", ""4697"", ""4698"", ""4699"", ""4700"", ""4701"",
+""4702"", ""4946"", ""4947"", ""4950"", ""4954"", ""5025"", ""5031"", ""5152"", ""5153"", ""5155"", ""5157"", ""5447"", ""linux555"")
+| eval security_logs=1
+| rename dest as joinid
+| dedup joinid
+| table joinid, security_logs]
+| stats count(security_logs) as count_matches by asset_name
+| eval match=if(count_matches>0, 1, 0)
+| eval spa_flag=case(match=1, ""false"", 1=1, ""true""), spa_identity=asset_name
+| eval spa_extra=if(match=1, ""The workstation sends security logs"", ""The workstation doesn't send security logs"")
+"
+06060103,"spa_06060103_networkSecurityLogManagement_search","(`spa_networkInventoryData_macro`) earliest=-24h@h AND sourcetype=""solarwinds:generic"" AND source=""solwarwinds_query://solarwinds_all_regions""
+`spa_comment_macro(""EODS"")`
+| eval match = if(syslog_activity_time>relative_time(now(),""-2d@d""), 1 , 0)
+| eval spa_flag=case(match=""1"", ""false"", 1=1, ""true""), spa_identity=IP_Address
+| eval spa_extra=if((match=""1""), ""The device sends security logs"", ""The device doesn't send security logs"")
+"
+06070101,"spa_06070101_logSourcesForAlerting_search","| eventcount summarize=false index=* 
+| fields index
+| eval idxs=index, src=""Indexes"" 
+| search index=""mdlz*"" OR index=""qualys*""
+| union 
+    [| rest /servicesNS/-/-/saved/searches 
+    | rex field=search max_match=0 ""index=(?P<idxs>\w*)"" 
+    | fields idxs 
+    | where idxs!="""" AND idxs!=""zero"" 
+    | eval src=""Reports & Alerts"" ] 
+| union 
+    [| rest /servicesNS/-/-/saved/eventtypes 
+    | rex field=search max_match=0 ""index=(?P<idxs>\w*)"" 
+    | fields idxs 
+    | where idxs!="""" 
+    | eval src=""Eventtypes"" ] 
+| union 
+    [| rest /servicesNS/-/-/data/models 
+    | rex field=eai:data max_match=0 ""\""search\"":\s\""(?P<search>.*)\"""" 
+    | rex field=search max_match=0 ""index=(?P<idxs>\w*)"" 
+    | fields idxs 
+    | where idxs!="""" 
+    | eval src=""Data Models""] 
+`spa_comment_macro(""EODS"")`
+| mvexpand idxs
+| stats values(src) as src by idxs
+| where src=""Indexes""
+| eval match=if(mvcount(src)>1, 1, 0), spa_flag=case(match=1, ""false"", 1=1, ""true""), spa_identity=idxs, spa_extra=case(match=1, ""Index which is being reviewed"", true(), ""Index which is NOT being reviewed"")
+"
+06080101,"spa_06080101_securityIncidentsFalsePositive_search","`spa_ticketData_macro` sourcetype=siemplify:casecreatedactions OR (sourcetype=""siemplify:CaseTags"" Tag=""False Positive"" OR Tag=""True Positive"" )  earliest=-7d@d latest=@d 
+`spa_comment_macro(""EODS"")` 
+| dedup CaseId
+| eval Output=if(isnull(Tag), ""NULL"", Tag)
+| eval match=case(Output=""True Positive"", 1, Output=""False Positive"", 0, Output=""NULL"", 0), spa_flag=case(match=1, ""false"", 1=1, ""true""), spa_identity=CaseId, spa_extra=case(match=1, ""True Positive"", true(), ""False Positive"")
+"
+07040101,"spa_07040101_urlFiltersIpamLocationOnPremise_search","| tstats summariesonly=t count as count from datamodel=Performance WHERE (earliest=-168h@h) AND sourcetype=""solarwinds:alerts"" by All_Performance.location 
+    `spa_comment_macro(""EODS"")` 
+| rename All_Performance.location as ipam
+| fields ipam 
+| join type=left ipam 
+    [| tstats summariesonly=t count from datamodel=Web WHERE (earliest=-168h@h) AND sourcetype=""zscalernss-web"" AND Web.location!=""Road Warrior"" by Web.ipam 
+    | rename Web.ipam as ipam 
+    | fields ipam 
+    | stats count by ipam 
+    | eval mark_zscaler=1] 
+| search ipam != ""-"" 
+| eval match=if(isnull(mark_zscaler),0,mark_zscaler) 
+| eval spa_flag=case(match=""1"", ""false"", 1=1, ""true""), spa_identity=ipam 
+| eval spa_extra=if((match=""1""), ""IPAM with enforced URL filters"", ""not defined"")
+    "
+07040201,"spa_07040201_urlFiltersWorkstationOffPremise_search","`spa_assetInventoryData_macro` source=Nexthink earliest=-336h@h
+`spa_comment_macro(""EODS"")`
+| eval identity=last_logged_on_user 
+| rex field=identity mode=sed ""s/\@.*$//"" 
+| eval identity=trim(upper(identity), "" "") 
+| stats count by last_ip_address, src, last_logged_on_user, identity 
+| lookup Infoblox-Networks cidr_range as last_ip_address OUTPUT cidr_range as network 
+| fields identity, network , last_logged_on_user, src 
+| stats count by identity, network, last_logged_on_user , src 
+| join type=left network 
+    [| tstats count as count_ from datamodel=IP_Asset_Inventory WHERE (earliest=-168h@h) by IP_Asset_Inventory.Subnet_Type, IP_Asset_Inventory.network 
+    | rename IP_Asset_Inventory.network as network, IP_Asset_Inventory.Subnet_Type as subnet_type 
+    | eval mark_IP_asset=1 
+    | fields network, subnet_type, mark_IP_asset] 
+| eval mark_IP_asset=if(isnull(mark_IP_asset),0,1) 
+| search mark_IP_asset=0 OR (mark_IP_asset=1 AND subnet_type=""VPN"")
+| join type=left identity 
+    [ search `spa_identityInventoryData_macro` source=user_asset earliest=-336h@h 
+    | stats count as count_ by email, identity 
+    | eval email=trim(upper(email), "" "") 
+    | table email, identity 
+    | join type=left email 
+        [| tstats summariesonly=t count as count_ from datamodel=Web WHERE (earliest=-336h@h) AND sourcetype=""zscalernss-web"" AND Web.location=""Road Warrior"" AND Web.user=""*@*"" AND Web.action!=""unknown"" by Web.user 
+        | eval mark_zscaler=1 
+        | rename Web.user as email 
+        | eval email=trim(upper(email), "" "") 
+        | table email, mark_zscaler] 
+    | search mark_zscaler=1 
+    | eval identity=trim(upper(identity), "" "") 
+    | fields identity, mark_zscaler] 
+| eval mark_zscaler=if(isnull(mark_zscaler),0,1)
+| stats max(mark_zscaler) as match by src
+| eval spa_flag=case(match=""1"", ""false"", 1=1, ""true""), spa_identity=src
+| eval spa_extra=if((match=""1""), ""Workstation with Enforced URL filters"", ""not defined"")
+"
+07050101,"spa_07050101_webSessions_search","| tstats count as uncategorized FROM datamodel=Web WHERE sourcetype=""zscalernss-web"" Web.user=""*@*"" Web.category=""misc*"" earliest=-1d@d latest=@d BY Web.recordid,Web.category
+`spa_comment_macro(""EODS"")`
+| rename Web.recordid as spa_identity, Web.category as category
+| eval spa_flag=""true"", spa_extra=(""RecordID: "".spa_identity."" category: "" .category)
+"
+07060101,"spa_07060101_workstations_search","`spa_assetInventoryData_macro` source=Nexthink earliest=-336h@h
+`spa_comment_macro(""EODS"")`
+| eval identity=last_logged_on_user 
+| rex field=identity mode=sed ""s/\@.*$//"" 
+| eval identity=trim(upper(identity), "" "") 
+| stats count by last_ip_address, src, last_logged_on_user, identity 
+| lookup Infoblox-Networks cidr_range as last_ip_address OUTPUT cidr_range as network 
+| fields identity, network , last_logged_on_user, src 
+| stats count by identity, network, last_logged_on_user , src 
+| join type=left network 
+    [| tstats count as count_ from datamodel=IP_Asset_Inventory WHERE (earliest=-168h@h) by IP_Asset_Inventory.Subnet_Type, IP_Asset_Inventory.network 
+    | rename IP_Asset_Inventory.network as network, IP_Asset_Inventory.Subnet_Type as subnet_type 
+    | eval mark_IP_asset=1 
+    | fields network, subnet_type, mark_IP_asset] 
+| eval mark_IP_asset=if(isnull(mark_IP_asset),0,1) 
+| search mark_IP_asset=0 OR (mark_IP_asset=1 AND subnet_type=""VPN"")
+| join type=left identity 
+    [ search `spa_identityInventoryData_macro` source=user_asset earliest=-336h@h 
+    | stats count as count_ by email, identity 
+    | eval email=trim(upper(email), "" "") 
+    | table email, identity 
+    | join type=left email 
+        [| tstats summariesonly=t count as count_ from datamodel=Web WHERE (earliest=-336h@h) AND sourcetype=""zscalernss-web"" AND Web.location=""Road Warrior"" AND Web.url!="""" by Web.user
+        | eval mark_zscaler=1 
+        | rename Web.user as email 
+        | eval email=trim(upper(email), "" "") 
+        | table email, mark_zscaler] 
+    | search mark_zscaler=1 
+    | eval identity=trim(upper(identity), "" "") 
+    | fields identity, mark_zscaler] 
+| eval mark_zscaler=if(isnull(mark_zscaler),0,1)
+| stats max(mark_zscaler) as match by src
+| eval spa_flag=case(match=""1"", ""false"", 1=1, ""true""), spa_identity=src, spa_extra=if((match=""1""), ""Off-prem workstation with logged URL by WAF solution"", ""Off-prem workstation WITHOUT logged URL by WAF solution"")
+"
+07060201,"spa_07060201_onPremServers_search","| tstats summariesonly=t count as count from datamodel=Web WHERE (earliest=-336h@h) AND sourcetype=""barracuda:web"" AND Web.url!="""" AND Web.dest!=""unknown"" by Web.dest 
+| union 
+    [ search `spa_assetInventoryData_macro` asset_status=ACTIVE asset_type=SERVER 
+    | stats values(asset_ip) as Web.dest by asset_name 
+    | eval Web.dest=split('Web.dest', "" "") 
+    | mvexpand Web.dest ]
+| stats values(count) as count, values(asset_name) as asset_name by Web.dest
+| where isnotnull(count)
+| eval match=if(isnotnull(asset_name), 1, 0), spa_flag=case(match=1, ""false"", 1=1, ""true""), spa_identity='Web.dest', spa_extra=case(match=1, ""On-prem server with logged URL by WAF solution"", true(), ""On-prem server WITHOUT logged URL by WAF solution"")
+"
+07060202,"spa_07060202_workstations_search","`spa_assetInventoryData_macro` source=Nexthink earliest=-336h@h 
+`spa_comment_macro(""EODS"")`
+| stats count by last_ip_address, src 
+| lookup Infoblox-Networks cidr_range as last_ip_address OUTPUT cidr_range as network 
+| stats count by network, src 
+| join type=left network 
+    [| tstats count as count_ from datamodel=IP_Asset_Inventory WHERE (earliest=-168h@h) by IP_Asset_Inventory.Subnet_Type, IP_Asset_Inventory.network, IP_Asset_Inventory.ipam 
+    | rename IP_Asset_Inventory.network as network, IP_Asset_Inventory.Subnet_Type as subnet_type, IP_Asset_Inventory.ipam as ipam 
+    | eval mark_IP_asset=1 
+    | fields network, subnet_type, ipam, mark_IP_asset] 
+| eval mark_IP_asset=if(isnull(mark_IP_asset),0,1) 
+| search mark_IP_asset=1 AND subnet_type!=""VPN"" 
+| join type=left ipam 
+    [| tstats summariesonly=t count as count_ from datamodel=Web WHERE (earliest=-336h@h) AND sourcetype=""zscalernss-web"" AND Web.location!=""Road Warrior"" AND Web.url!="""" by Web.user 
+    | rex max_match=1 field=Web.user ""\""?(?P<ipam>[^_]+)\_"" 
+    | stats count by ipam
+    | eval mark_zscaler=1
+    | table ipam mark_zscaler]
+| eval match=if(isnotnull(mark_zscaler), 1, 0), spa_flag=case(match=1, ""false"", 1=1, ""true""), spa_identity=src, spa_extra=case(match=1, ""On-prem workstation with logged URL by WAF solution"", true(), ""On-prem workstation WITHOUT logged URL by WAF solution from IPAM - "".ipam)
+"
+07070101,"spa_07070101_inspectedWebSessions_search","| tstats summariesonly=t count as count_ from datamodel=Web WHERE (earliest=-336h@h) by Web.action
+`spa_comment_macro(""EODS"")`
+| eval Web.action=if('Web.action'!=""unknown"", ""positive"", ""negative"")
+| stats sum(count_) as count by Web.action
+| eventstats sum(count) as total
+| eval currentValue=round(count/total, 5)
+"
+07070201,"spa_07070201_rewrittenUrl_search","| tstats values(All_Email.filter.modules.urldefense.counts.rewritten) AS rewritten_url_count, values(All_Email.filter.modules.urldefense.counts.unique) AS unique_url_count, values(All_Email.url) AS url FROM datamodel=Email WHERE All_Email.filter.modules.urldefense.counts.unique!=0 BY All_Email.guid
+`spa_comment_macro(""EODS"")`
+| eval match=if(rewritten_url_count>=unique_url_count, 1, 0), spa_flag=case(match=1, ""false"", 1=1, ""true""), spa_identity='All_Email.guid', spa_extra=case(match=1, ""Email message with rewritten URL/URLs"", true(), ""Email message WITHOUT rewritten URL/URLs"")
+"
+07080101,"spa_07080101_emailDmarcInspected_search","| tstats values(All_Email.guid) AS guid FROM datamodel=Email WHERE All_Email.filter.routeDirection=""inbound"" AND All_Email.final_rule!="""" earliest=-7d@d latest=@d
+|  union 
+    [| tstats values(All_Email.guid) AS guid FROM datamodel=Email WHERE All_Email.filter.routeDirection=""inbound"" AND All_Email.action_dmarc.rule=""*"" earliest=-7d@d latest=@d]
+`spa_comment_macro(""EODS"")`
+| stats count as CNT by guid
+| eval match=if(CNT>1, 1, 0)
+| eval spa_flag=case(match=1, ""false"", 1=1, ""true""), spa_identity=guid, spa_extra=case(match=1, ""DMARC inspected"", true(), ""Not DMARC inspected"")
+"
+07090101,"spa_07090101_emailDiscardedAttachments_search","| tstats values(All_Email.guid) AS guid FROM datamodel=Email WHERE All_Email.filter.routeDirection=""inbound"" AND  All_Email.filter.actions.rule=""Exestrip*"" earliest=-7d@d latest=@d
+|  union 
+    [| tstats values(All_Email.guid) AS guid FROM datamodel=Email WHERE All_Email.filter.routeDirection=""inbound"" AND  All_Email.filter.actions.rule=""Exestrip*"" AND All_Email.final_action=""discard"" earliest=-7d@d latest=@d]
+`spa_comment_macro(""EODS"")`
+| stats count as CNT by guid
+| eval match=if(CNT>1, 1, 0)
+| eval spa_flag=case(match=1, ""false"", 1=1, ""true""), spa_identity=guid, spa_extra=case(match=1, ""Attachement discarded"", true(), ""Attachement NOT discarded"")
+"
+07100101,"spa_07100101_emailSandboxedAttachments_search","| tstats values(All_Email.guid) AS guid FROM datamodel=Email WHERE All_Email.filter.routeDirection=""inbound"" AND All_Email.MsgPartsDisposition=""attached"" AND All_Email.final_rule=""scanning"" AND All_Email.final_module=""sandbox"" earliest=-7d@d latest=@d
+`spa_comment_macro(""EODS"")`
+| stats count as CNT by guid
+| eval match=if(CNT>0, 1, 0)
+| eval spa_flag=case(match=1, ""false"", 1=1, ""true""), spa_identity=""Attachment inspection with Sandbox execution in effect"", spa_extra=case(match=1, ""Attachments inspected with sandbox execution"", true(), ""Attachments NOT inspected with sandbox execution"")
+| head 1
+"
+08010101,"spa_08010101_serverAtpCoverage_search","(`spa_assetInventoryData_macro`) earliest=-24h@h latest=now asset_type=Server AND asset_status=ACTIVE not_eligible_for_atp=false
+`spa_comment_macro(""EODS"")`
+| eval spa_flag=case(asset_atp=""true"", ""false"", 1=1, ""true""), spa_identity=asset_name
+| eval spa_extra=if((asset_atp=""true""), ""covered by ATP"", ""NOT covered by ATP"")
+"
+08010102,"spa_08010102_workstationAtpCoverage_search","(`spa_assetInventoryData_macro`) earliest=-24h@h asset_type=Workstation AND asset_status=ACTIVE
+`spa_comment_macro(""EODS"")`
+| eval spa_flag=case(asset_atp=""true"", ""false"", 1=1, ""true""), spa_identity=asset_name
+| eval spa_extra=if((asset_atp=""true""), ""covered by ATP"", ""NOT covered by ATP"")
+"
+08020101,"spa_08020101_serverAtpConnection_search","(`spa_assetInventoryData_macro`) earliest=-24h@h AND asset_type=Server AND asset_status=ACTIVE AND asset_atp=true AND not_eligible_for_atp=false
+`spa_comment_macro(""EODS"")`
+| rename epo_date as McAfee_date
+| table asset_atp_vendor, McAfee_date, symantec_date, crowdstrike_date, asset_name
+| rex field=crowdstrike_date mode=sed ""s/[a-zA-Z]//g""
+| eval crowdstrike_date=strptime(crowdstrike_date, ""%Y-%m-%d%H:%M:%S"")
+| eval general_date = if(isnull(McAfee_date), if(isnull(symantec_date), crowdstrike_date, symantec_date), McAfee_date)
+| eval match = if(general_date>relative_time(now(),""-15d@d""), 1 , 0)
+| eval general_date_hr=strftime(general_date, ""%m/%d/%Y"")
+| eval spa_flag=case(match=""1"", ""false"", 1=1, ""true""), spa_identity=asset_name
+| eval spa_extra=if((match=""1""), ""communication with ATP console was within last 15 days"", ""communication with ATP console was more than 15 days ago"")
+"
+08020102,"spa_08020102_workstationAtpConnection_search","(`spa_assetInventoryData_macro`) earliest=-24h@h AND asset_type=Workstation AND asset_status=ACTIVE AND asset_atp=true
+`spa_comment_macro(""EODS"")`
+| rename epo_date as McAfee_date
+| table asset_atp_vendor, McAfee_date, symantec_date, crowdstrike_date, asset_name
+| rex field=crowdstrike_date mode=sed ""s/[a-zA-Z]//g""
+| eval crowdstrike_date=strptime(crowdstrike_date, ""%Y-%m-%d%H:%M:%S"")
+| eval general_date = if(isnull(McAfee_date), if(isnull(symantec_date), crowdstrike_date, symantec_date), McAfee_date)
+| eval match = if(general_date>relative_time(now(),""-15d@d""), 1 , 0)
+| eval general_date_hr=strftime(general_date, ""%m/%d/%Y"")
+| eval spa_flag=case(match=""1"", ""false"", 1=1, ""true""), spa_identity=asset_name
+| eval spa_extra=if((match=""1""), ""communication with ATP console was within last 15 days"", ""communication with ATP console was more than 15 days ago"")
+"
+08020201,"spa_08020201_serverAtpVersionCompliance_search","(`spa_assetInventoryData_macro`) earliest=-24h@h AND asset_type=Server AND asset_status=ACTIVE AND not_eligible_for_atp=false AND asset_atp=true
+`spa_comment_macro(""EODS"")`
+| eventstats values(asset_atp_version) as mv_atp_versions by asset_atp_vendor
+| eval mv_last_atp_versions=mvindex(mv_atp_versions, -1,-1)
+| eval ATP_mark_by_last_version=if(mv_last_atp_versions= asset_atp_version, ""1"", ""0"")
+| eventstats count as count_by_Vendor_Version by asset_atp_vendor, asset_atp_version
+| eventstats max(count_by_Vendor_Version) as max_count_version_by_vendor by asset_atp_vendor
+| eval most_common_version=if((max_count_version_by_vendor=count_by_Vendor_Version), asset_atp_version, ""0.0.0"")
+| eventstats max(most_common_version) as most_common_version by asset_atp_vendor
+| eval ATP_mark_by_common_version=if(most_common_version = asset_atp_version, ""1"", ""0"")
+| table asset_name, asset_atp_vendor, asset_atp_version, mv_last_atp_versions, most_common_version, ATP_mark_by_last_version, ATP_mark_by_common_version
+| eval match=if((ATP_mark_by_last_version=1 OR ATP_mark_by_common_version=1), 1,0)
+| eval spa_flag=case(match=""1"", ""false"", 1=1, ""true""), spa_identity=asset_name
+| eval spa_extra=if((match!=""1""), ""not compliant with any versions"", if(ATP_mark_by_last_version=""1"", ""compliant with the last version"", ""compliant with the most common version""))
+"
+08020202,"spa_08020202_workstationAtpVersionCompliance_search","(`spa_assetInventoryData_macro`) earliest=-24h@h AND asset_type=Workstation AND asset_status=ACTIVE AND asset_atp=true
+`spa_comment_macro(""EODS"")`
+| eventstats values(asset_atp_version) as mv_atp_versions by asset_atp_vendor
+| eval mv_last_atp_versions=mvindex(mv_atp_versions, -1,-1)
+| eval ATP_mark_by_last_version=if(mv_last_atp_versions= asset_atp_version, ""1"", ""0"")
+| eventstats count as count_by_Vendor_Version by asset_atp_vendor, asset_atp_version
+| eventstats max(count_by_Vendor_Version) as max_count_version_by_vendor by asset_atp_vendor
+| eval most_common_version=if((max_count_version_by_vendor=count_by_Vendor_Version), asset_atp_version, ""0.0.0"")
+| eventstats max(most_common_version) as most_common_version by asset_atp_vendor
+| eval ATP_mark_by_common_version=if(most_common_version = asset_atp_version, ""1"", ""0"")
+| table asset_name, asset_atp_vendor, asset_atp_version, mv_last_atp_versions, most_common_version, ATP_mark_by_last_version, ATP_mark_by_common_version
+| eval match=if((ATP_mark_by_last_version=1 OR ATP_mark_by_common_version=1), 1,0)
+| eval spa_flag=case(match=""1"", ""false"", 1=1, ""true""), spa_identity=asset_name
+| eval spa_extra=if((match!=""1""), ""not compliant with any versions"", if(ATP_mark_by_last_version=""1"", ""compliant with the last version"", ""compliant with the most common version""))
+"
+08040101,"spa_08040101_workstationRemovableScanCompliance_search","(`spa_atpData_macro` sourcetype=*crowdstrike* device_policies.device_control.policy_id=ab8585b2ada4409ab4a91a86e2bb6ab1) OR (`spa_assetInventoryData_macro` asset_status=ACTIVE asset_type=SERVER OR asset_type=WORKSTATION)
+`spa_comment_macro(""EODS"")`
+| eval hostname=case(index LIKE ""%crowdstrike%"", UPPER(hostname), index LIKE ""%inventory%"", UPPER(asset_name))
+| stats values(index) as idxs by hostname
+| eval match=if(mvcount(idxs)>1, 1, 0), spa_flag=case(match=1, ""false"", 1=1, ""true""), spa_identity=hostname, spa_extra=case(match=1, ""Hostname with applied CS device control policy in CS"", true(), ""Hostname without applied CS device control policy in CS"")
+"
+08050101,"spa_08050101_workstationAutoRunCompliance_search","`spa_assetInventoryData_macro` asset_status=ACTIVE asset_type=SERVER OR asset_type=WORKSTATION asset_domain=IT
+`spa_comment_macro(""EODS"")`
+| dedup asset_name
+| eval match=if(UPPER(ad_status)!=""NONE"", 1, 0), spa_flag=case(match=1, ""false"", 1=1, ""true""), spa_identity=asset_name, spa_extra=case(match=1, ""Hostname with applied CS device control policy in CS"", true(), ""Hostname without applied CS device control policy in CS"")
+"
+08060101,"spa_08060101_atpSystemsData_search","| tstats values(sourcetype) as sourcetype, values(cid) as cid WHERE (`spa_atpData_macro` earliest=-30d@d) by index
+| fillnull value=NULL 
+| mvexpand cid
+| eval check=""big"", IDX=case(sourcetype=""mcafee:epo"", ""McAfee"", sourcetype LIKE ""%armis%"", ""Armis"", sourcetype LIKE ""%symantec%"", ""Symantec Endpoint Protection"", sourcetype LIKE ""%crowdstrike%"" AND cid=""d5e121ca0ecb4c00af21b13981783461"",""CrowdStrike Falcon OT"", sourcetype LIKE ""%crowdstrike%"" AND cid=""7a236230d4ee45af9b9b183a92402b56"" ,""CrowdStrike Falcon IT"") 
+| union
+    [ tstats values(sourcetype) as sourcetype values(cid) as cid  WHERE (`spa_atpData_macro` earliest=-48h@h) by index
+    | fillnull value=NULL 
+    | mvexpand cid
+    | eval check=""small"", IDX=case(sourcetype=""mcafee:epo"", ""McAfee"", sourcetype LIKE ""%armis%"", ""Armis"", sourcetype LIKE ""%symantec%"", ""Symantec Endpoint Protection"", sourcetype LIKE ""%crowdstrike%"" AND cid=""d5e121ca0ecb4c00af21b13981783461"",""CrowdStrike Falcon OT"", sourcetype LIKE ""%crowdstrike%"" AND cid=""7a236230d4ee45af9b9b183a92402b56"" ,""CrowdStrike Falcon IT"")]
+	| append
+[ makeresults | eval index=""mdlz_azure_windows_defender_cat1"", sourcetype=""windef:alerts"", cid=""NULL"", IDX=""Windows Defender"", check=""big""]
+`spa_comment_macro(""EODS"")`
+| stats values(check) as Check by IDX
+| eval match=if(mvcount(Check)>1,1 ,0) 
+| eval spa_flag=case(match=1, ""false"", 1=1, ""true""), spa_identity=IDX, spa_extra=case(match=1, ""ATP sending data"", true(), ""ATP not sending data"")
+"
+08070101,"spa_08070101_dnsSystemLogs_search","| tstats values(host) as host WHERE (`spa_dnsData_macro` earliest=1)
+| eval period=""big""
+| union 
+    [ tstats values(host) as host WHERE (`spa_dnsData_macro` eventtype=infoblox_dns earliest=-48h@h)
+    | eval period=""small""]
+`spa_comment_macro(""EODS"")` 
+| stats values(period) as period by host
+| eval match=if(mvcount(period)>1,1,0)
+| eval spa_flag=case(match=1, ""false"", 1=1, ""true""), spa_identity=host, spa_extra=case(match=1, ""DNS instance is sending logs to Splunk"", true(), ""DNS instance is NOT sending logs to Splunk"")
+"
+08070201,"spa_08070201_serverDnsQueryLogs_search","| tstats summariesonly=t values(Signatures.dest) AS hostname FROM datamodel=Event_Signatures WHERE Signatures.signature_id IN (3006,3008,3009,3018,3020) earliest=-48h@h latest=@d BY Signatures.signature_id
+| eval src=""DM"", hostname=UPPER(hostname)
+| union 
+    [ search `spa_allInventoryData_macro` asset_type=Server asset_status=ACTIVE earliest=-48h@h
+    | eval src=""IDX"", hostname=UPPER(asset_name), Signatures.signature_id=""null""
+    | table hostname src Signatures.signature_id ]
+`spa_comment_macro(""EODS"")`
+| stats values(src) as idx by hostname
+| where idx=""IDX""
+| eval match=if(mvcount(idx)>1, 1, 0), spa_flag=case(match=1, ""false"", 1=1, ""true""), spa_identity=hostname, spa_extra=case(match=1, ""DNS instance is sending logs to Splunk"", true(), ""DNS instance is NOT sending logs to Splunk"")
+"
+08070202,"spa_08070202_workstationDnsQueryLogs_search","| tstats summariesonly=t values(Signatures.dest) AS hostname FROM datamodel=Event_Signatures WHERE Signatures.signature_id IN (3006,3008,3009,3018,3020) earliest=-48h@h latest=@d BY Signatures.signature_id
+| eval src=""DM"", hostname=UPPER(hostname)
+| union 
+    [ search `spa_allInventoryData_macro` asset_status=ACTIVE asset_type=Workstation earliest=-48h@h
+    | eval src=""IDX"", hostname=UPPER(asset_name), Signatures.signature_id=""null""
+    | table hostname src Signatures.signature_id ]
+`spa_comment_macro(""EODS"")`
+| stats values(src) as idx by hostname
+| where idx=""IDX""
+| eval match=if(mvcount(idx)>1, 1, 0), spa_flag=case(match=1, ""false"", 1=1, ""true""), spa_identity=hostname, spa_extra=case(match=1, ""DNS instance is sending logs to Splunk"", true(), ""DNS instance is NOT sending logs to Splunk"")
+"
+08080101,"spa_08080101_serverPowerShellLogs_search","index=non_existent
+`spa_comment_macro(""EODS"")`
+"
+08080102,"spa_08080102_serverUniversalForwarderLogs_search","| `mdlz_asset_tracker` | fields asset_status asset_type asset_name 
+| search asset_status=""ACTIVE"" asset_type=""Server"" 
+| rex field=hostname mode=sed ""s/\..*$//""
+| eval hostname=UPPER(asset_name)
+       | join type=left hostname [search index=_internal sourcetype=splunkd group=tcpin_connections (connectionType=cooked OR connectionType=cookedSSL) fwdType=uf earliest=-48h@h | fields tcp_KBps tcp_eps hostname fwdType
+       | where _time>relative_time(now(),""-1d@d"")
+       | rex field=hostname mode=sed ""s/\..*$//""
+       | eval hostname=UPPER(hostname)
+       | stats sum(tcp_KBps) as tcp_KBps, sum(tcp_eps) as tcp_eps, values(fwdType) as fwdType  by hostname ]
+`spa_comment_macro(""EODS"")`
+| stats values(fwdType) as package, values(tcp_KBps) as tcp_KBps, values(tcp_eps) as tcp_eps  by hostname
+| eval spa_flag=if(isnotnull(tcp_eps), ""false"", ""true""), spa_identity=hostname, spa_extra=if(isnotnull(tcp_eps), ""HOST: "".spa_identity+"", Package: "".package, ""No UF installed"")
+"
+09050101,"spa_09050101_criticalServersCoveredByApplicationFirewall_search","`spa_assetInventoryData_macro` asset_status=ACTIVE asset_type=SERVER asset_criticality_score>1 earliest=-48h@h 
+`spa_comment_macro(""EODS"")`
+| stats count by asset_name, asset_criticality_score, asset_ip_address 
+| eval src=""Source 1"", asset_ip_address=split(asset_ip_address, ""
+"")
+| mvexpand asset_ip_address
+| union 
+    [| tstats count from datamodel=Web.Web where sourcetype=""barracuda:web"" (earliest=-168h@h) by Web.spa_proxy_ip 
+     | eval asset_ip_address='Web.spa_proxy_ip', src=""Source 2"" ]
+| union 
+    [| tstats count from datamodel=Web.Web where Web.src!=""-"" sourcetype=""zscalernss-web"" (earliest=-168h@h) by Web.src 
+     | eval asset_ip_address='Web.src', src=""Source 2"" ]
+| union 
+    [| tstats count from datamodel=Web.Web where Web.src!=""-"" sourcetype=""bluecoat:proxysg:access:syslog"" (earliest=-168h@h) by Web.src 
+     | eval asset_ip_address='Web.src', src=""Source 2"" ]
+| stats values(src) as src, values(asset_name) as asset_name by asset_ip_address
+| where src=""Source 1""
+| mvexpand asset_name
+| stats values(src) as src, values(asset_ip_address) as asset_ip_address by asset_name
+| eval spa_flag=case(mvcount(src)>1, ""false"", 1=1, ""true""), spa_identity=asset_name, spa_extra=if(mvcount(src)>1, ""Critical Server covered by Application Firewall"", ""Critical Server covered NOT by Application Firewall"")
+"
+10010101,"spa_10010101_serverAutoBackup_search","| `mdlz_asset_tracker` | fields asset_status asset_type asset_name asset_domain
+| search asset_status=""ACTIVE"" asset_type=""Server"" asset_domain=""IT""
+| rename asset_name as ""dest""
+|join type=left dest [ | tstats values(All_Changes.dest) as dest from datamodel=Change.All_Changes WHERE All_Changes.dest!=unknown sourcetype=eventhub:administrative All_Changes.result=""Backup Succeeded"" (earliest=-7d@h latest=@d) by _time, All_Changes.result All_Changes.user span=1h
+| rename All_Changes.user as user
+| where user like ""%Microsoft.RecoveryServices%""
+| stats values(_time) as Time, values(user) as user by dest
+| eval one=mvindex(Time,-1), two=mvindex(Time,-2), three=mvindex(Time,-3), four=mvindex(Time,-4), five=mvindex(Time,-5), six=mvindex(Time,-6), seven=mvindex(Time,-7)]
+`spa_comment_macro(""EODS"")`
+| eval spa_flag=case(one-two=86400 AND two-three=86400, ""false"", two-three=86400 AND three-four=86400, ""false"", three-four=86400 AND four-five=86400, ""false"", four-five=86400 AND five-six=86400, ""false"", five-six=86400 AND six-seven=86400, ""false"", 1=1, ""true""), spa_identity=if(isnotnull(dest), dest, ""Unknown""), spa_extra=(""Device: "".spa_identity+if(spa_flag=""false"","". Backed up 3 three consecutive times in the last 7 days"", "". NOT backed up 3 three consecutive times in the last 7 days""))
+"
+10010102,"spa_10010102_networkAutoBackup_search","| tstats values(HardwareAssetInventory.IP_Address) as ipAddress from datamodel=Hardware_Asset_Inventory.HardwareAssetInventory WHERE HardwareAssetInventory.Status=Up HardwareAssetInventory.Network_Function!=*server* AND HardwareAssetInventory.Network_Function!=""Wireless Access Point"" (earliest=-7d@d latest=@d) by HardwareAssetInventory.Caption
+| eval dvc=upper('HardwareAssetInventory.Caption')
+| join type=left dvc 
+    [ | tstats values(All_Changes.spa_logdesc) as logdesc from datamodel=Change.All_Changes WHERE All_Changes.spa_logdesc=""System configuration backed up*"" All_Changes.user=auto-m8 (earliest=-7d@d latest=@d) by _time, All_Changes.user, All_Changes.dvc, All_Changes.spa_logid span=1h
+| rename All_Changes.user as user, All_Changes.dvc as dvc, All_Changes.spa_logid as logid
+| stats values(_time) as Time, values(user) as user, values(logdesc) as logdesc, values(logid) as logid by dvc
+| eval one=mvindex(Time,-1), two=mvindex(Time,-2), three=mvindex(Time,-3), four=mvindex(Time,-4), five=mvindex(Time,-5), six=mvindex(Time,-6), seven=mvindex(Time,-7)]
+`spa_comment_macro(""EODS"")`
+| eval spa_flag=case(one-two=86400 AND two-three=86400, ""false"", two-three=86400 AND three-four=86400, ""false"", three-four=86400 AND four-five=86400, ""false"", four-five=86400 AND five-six=86400, ""false"", five-six=86400 AND six-seven=86400, ""false"", 1=1, ""true""), spa_identity=if(isnotnull(dvc), dvc, ""Unknown""), spa_extra=(""Device: "".spa_identity+if(spa_flag=""false"","". Backed up 3 three consecutive times in the last 7 days"", "". NOT backed up 3 three consecutive times in the last 7 days""))
+"
+10020101,"spa_10020101_serverFullAutoBackup_search","| `mdlz_asset_tracker` | fields asset_status asset_type asset_name asset_domain
+| search asset_status=""ACTIVE"" asset_type=""Server"" asset_domain=""IT""
+| rename asset_name as ""dest""
+|join type=left dest [ | tstats values(All_Changes.dest) as dest from datamodel=Change.All_Changes WHERE All_Changes.dest!=unknown sourcetype=eventhub:administrative All_Changes.result=""Backup Succeeded"" (earliest=-7d@h latest=@d) by _time, All_Changes.result All_Changes.user span=1h
+| rename All_Changes.user as user
+| where user like ""%Microsoft.RecoveryServices%""
+| stats values(_time) as Time, values(user) as user by dest
+| eval one=mvindex(Time,-1), two=mvindex(Time,-2), three=mvindex(Time,-3), four=mvindex(Time,-4), five=mvindex(Time,-5), six=mvindex(Time,-6), seven=mvindex(Time,-7)]
+`spa_comment_macro(""EODS"")`
+| eval spa_flag=case(one-two=86400 AND two-three=86400, ""false"", two-three=86400 AND three-four=86400, ""false"", three-four=86400 AND four-five=86400, ""false"", four-five=86400 AND five-six=86400, ""false"", five-six=86400 AND six-seven=86400, ""false"", 1=1, ""true""), spa_identity=if(isnotnull(dest), dest, ""Unknown""), spa_extra=(""Device: "".spa_identity+if(spa_flag=""false"","". Backed up 3 three consecutive times in the last 7 days"", "". NOT backed up 3 three consecutive times in the last 7 days""))
+"
+10020102,"spa_10020102_networkFullAutoBackup_search","| tstats values(HardwareAssetInventory.IP_Address) as ipAddress from datamodel=Hardware_Asset_Inventory.HardwareAssetInventory WHERE HardwareAssetInventory.Status=Up HardwareAssetInventory.Network_Function!=*server* AND HardwareAssetInventory.Network_Function!=""Wireless Access Point"" (earliest=-7d@d latest=@d) by HardwareAssetInventory.Caption
+| eval dvc=upper('HardwareAssetInventory.Caption')
+| join type=left dvc 
+    [ | tstats values(All_Changes.spa_logdesc) as logdesc from datamodel=Change.All_Changes WHERE All_Changes.spa_logdesc=""System configuration backed up*"" All_Changes.user=auto-m8 (earliest=-7d@d latest=@d) by _time, All_Changes.user, All_Changes.dvc, All_Changes.spa_logid span=1h
+| rename All_Changes.user as user, All_Changes.dvc as dvc, All_Changes.spa_logid as logid
+| stats values(_time) as Time, values(user) as user, values(logdesc) as logdesc, values(logid) as logid by dvc
+| eval one=mvindex(Time,-1), two=mvindex(Time,-2), three=mvindex(Time,-3), four=mvindex(Time,-4), five=mvindex(Time,-5), six=mvindex(Time,-6), seven=mvindex(Time,-7)]
+`spa_comment_macro(""EODS"")`
+| eval spa_flag=case(one-two=86400 AND two-three=86400, ""false"", two-three=86400 AND three-four=86400, ""false"", three-four=86400 AND four-five=86400, ""false"", four-five=86400 AND five-six=86400, ""false"", five-six=86400 AND six-seven=86400, ""false"", 1=1, ""true""), spa_identity=if(isnotnull(dvc), dvc, ""Unknown""), spa_extra=(""Device: "".spa_identity+if(spa_flag=""false"","". Backed up 3 three consecutive times in the last 7 days"", "". NOT backed up 3 three consecutive times in the last 7 days""))
+"
+11040101,"spa_11040101_networkDevicesWithoutEOLOSRelatedVulnerabilities_search","(`spa_networkInventoryData_macro` (family=""Access Switch"" OR family=""Core Switch"" OR family=""Firewall"")  earliest=-48h@h latest=now IP_Address=*)
+| join type=left IP_Address [| tstats values(Vulnerabilities.spa_qid) as spa_qid, values(Vulnerabilities.signature) as signature from datamodel=Vulnerabilities.Vulnerabilities WHERE Vulnerabilities.signature=""EOL/Obsolete Operating System*""  (earliest=-30d@d) by Vulnerabilities.dest
+ | rename Vulnerabilities.dest as IP_Address]
+`spa_comment_macro(""EODS"")`
+| stats values(signature) as signature values(spa_qid) as spa_qid by IP_Address
+| eval spa_flag=if(isnull(spa_qid), ""false"", ""true""), spa_identity=IP_Address, spa_extra=if(spa_flag=""false"", ""No EOL related vulnerabilities"", signature)
+
+"
+11060101,"spa_11060101_administrativeRemoteSessions_search","index=fake
+`spa_comment_macro(""EODS"")`
+"
+12010101,"spa_12010101_plantsBoundaryInventory_search","| tstats values(HardwareAssetInventory.Caption) as dvc, values(HardwareAssetInventory.IPAM_Code) as ipam FROM datamodel=""Hardware_Asset_Inventory.HardwareAssetInventory"" WHERE HardwareAssetInventory.Manufacturer=""Fortinet"" HardwareAssetInventory.Network_Function=""Firewall"" HardwareAssetInventory.Status=""Up""  HardwareAssetInventory.Site_Type=""Manufacturing Plant*"" earliest=-7d@d latest=@d by HardwareAssetInventory.Caption
+| eval dvc=upper(dvc) 
+| fields dvc ipam 
+| join type=left dvc 
+    [| tstats count summariesonly=t from datamodel=""Network_Traffic.All_Traffic"" where sourcetype=fgt_traffic earliest=-7d@d latest=@d by All_Traffic.dvc 
+    | rename All_Traffic.dvc as dvc]
+| stats values(dvc) as dvc, values(count) as count by ipam
+`spa_comment_macro(""EODS"")` 
+| eval spa_flag=if(isnotnull(count) OR count="""",""false"", ""true""), spa_identity=if(isnotnull(ipam), ipam, ""Unknown""), spa_extra=(""IPAM: "".spa_identity+if(spa_flag=""false"","" - Has a device sending logs for perimeter boundaries - Manufacturing Plants"", "" - Does NOT have a device sending logs for perimeter boundaries - Manufacturing Plants""))
+"
+12010102,"spa_12010102_officeNetworkBoundaryInventory_search","| tstats values(HardwareAssetInventory.Caption) as dvc, values(HardwareAssetInventory.IPAM_Code) as ipam FROM datamodel=""Hardware_Asset_Inventory.HardwareAssetInventory"" WHERE HardwareAssetInventory.Manufacturer=""Fortinet"" HardwareAssetInventory.Network_Function=""Firewall"" HardwareAssetInventory.Status=""Up""  HardwareAssetInventory.Site_Type!=""Manufacturing Plant*"" earliest=-7d@d latest=@d by HardwareAssetInventory.Caption
+| eval dvc=upper(dvc) 
+| fields dvc ipam 
+| join type=left dvc 
+    [| tstats count summariesonly=t from datamodel=""Network_Traffic.All_Traffic"" where sourcetype=fgt_traffic earliest=-7d@d latest=@d by All_Traffic.dvc 
+    | rename All_Traffic.dvc as dvc]
+| stats values(dvc) as dvc, values(count) as count by ipam
+`spa_comment_macro(""EODS"")` 
+| eval spa_flag=if(isnotnull(count) OR count="""",""false"", ""true""), spa_identity=if(isnotnull(ipam), ipam, ""Unknown""), spa_extra=(""IPAM: "".spa_identity+if(spa_flag=""false"","" - Has a device sending logs for perimeter boundaries - Office Network Premises"", "" - Does NOT have a device sending logs for perimeter boundaries - Office Network Premises""))
+"
+12010103,"spa_12010103_dataCenterBoundaryInventory_search","| tstats values(HardwareAssetInventory.Caption) as dvc, values(HardwareAssetInventory.IPAM_Code) as ipam FROM datamodel=""Hardware_Asset_Inventory.HardwareAssetInventory"" WHERE HardwareAssetInventory.Manufacturer=""Checkpoint"" HardwareAssetInventory.Network_Function=""Firewall"" HardwareAssetInventory.Status=""Up""  HardwareAssetInventory.Site_Type=""Manufacturing Plant*"" earliest=-7d@d latest=@d by HardwareAssetInventory.Caption
+| eval dvc=upper(dvc) 
+| fields dvc ipam 
+| join type=left dvc 
+    [| tstats count summariesonly=t from datamodel=""Network_Traffic.All_Traffic"" where sourcetype=pa earliest=-1m@m latest=@m by All_Traffic.dvc 
+    | rename All_Traffic.dvc as dvc]
+| stats values(dvc) as dvc, values(count) as count by ipam
+`spa_comment_macro(""EODS"")` 
+| eval spa_flag=if(isnotnull(count),""false"", ""true""), spa_identity=if(isnotnull(dvc), dvc, ""Unknown""), spa_extra=(""Device: "".spa_identity+if(spa_flag=""false"","". Is sending logs for perimeter boundaries - Manufacturing Plants"", "". Is NOT sending logs for perimeter boundaries - On-Prem""))
+"
+12010104,"spa_12010104_cloudBoundaryInventory_search","`spa_azureResourceGraphData_macro` earliest=-48h@h latest=@h
+| stats count by asset_name location
+| fields - count
+| join type=left asset_name 
+    [| tstats count where `spa_firewallData_macro` source=/opt/syslog/paloalto* earliest=-24h@h latest=@h by host 
+    | rename host as asset_name ] 
+| stats values(asset_name) as asset_name, values(count) as count by location
+`spa_comment_macro(""EODS"")`
+| eval spa_flag=if(isnotnull(count),""false"", ""true""), spa_identity=if(isnotnull(location), location, ""Unknown""), spa_extra=(""Location: "".spa_identity+if(spa_flag=""false"","" - Has a device sending logs for perimeter boundaries - Azure Cloud"", "" - Has a device sending logs for perimeter boundaries - Azure Cloud""))
+"
+12030101,"spa_12030101_onPremBoundaryBlacklisting_search","| tstats values(HardwareAssetInventory.Serial) as Serial from datamodel=Hardware_Asset_Inventory.HardwareAssetInventory where (earliest=-7d@d latest=@d HardwareAssetInventory.Network_Function=""Firewall"" HardwareAssetInventory.Manufacturer=""Fortinet"") by HardwareAssetInventory.IP_Address, HardwareAssetInventory.Caption 
+| eval serial = upper(Serial), asset_name = upper('HardwareAssetInventory.Caption') 
+| fields serial asset_name 
+| join serial 
+    [| search `spa_firewallRoutingTables_macro` earliest=-48h@h latest=@h
+    | stats values(vdom) as vdom by serial] 
+| makemv delim="" "" vdom 
+| mvexpand vdom 
+| eval serial_vdom = serial."";"".vdom 
+| join type=left serial_vdom 
+    [ | search `spa_firewallAddrGroups_macro` results.name!=G-BLOCK* results.name=*block* OR results.name=*black* earliest=-48h@h latest=@h
+    | rename results.name as addrgrp 
+    | eval serial_vdom = serial."";"".vdom 
+    | stats count by serial_vdom addrgrp 
+    | fields serial_vdom addrgrp]
+`spa_comment_macro(""EODS"")` 
+| eval spa_flag=if(isnotnull(addrgrp),""false"", ""true""), spa_identity=if(isnotnull(asset_name), asset_name, ""Unknown""), spa_extra=if(spa_flag=""false"", (""Device: "".asset_name."", VDOM: "".vdom+"" - Is configured with a blacklist.""), (""Device: "".asset_name."", VDOM: "".vdom+"" - Is NOT configured with a blacklist.""))
+"
+12030102,"spa_12030102_dataCenterBoundaryBlacklisting_search","| tstats values(HardwareAssetInventory.Serial) as Serial from datamodel=Hardware_Asset_Inventory.HardwareAssetInventory where (earliest=-7d@d latest=@d HardwareAssetInventory.Network_Function=""Firewall"" HardwareAssetInventory.Manufacturer=""Checkpoint"") by HardwareAssetInventory.IP_Address, HardwareAssetInventory.Caption 
+| eval serial = upper(Serial), asset_name = upper('HardwareAssetInventory.Caption') 
+| fields serial asset_name 
+| join serial 
+    [| search `spa_firewallRoutingTables_macro` earliest=-48h@h latest=@h
+    | stats values(vdom) as vdom by serial] 
+| makemv delim="" "" vdom 
+| mvexpand vdom 
+| eval serial_vdom = serial."";"".vdom 
+| join type=left serial_vdom 
+    [ | search `spa_firewallAddrGroups_macro` results.name!=G-BLOCK* results.name=*block* OR results.name=*black* earliest=-48h@h latest=@h
+    | rename results.name as addrgrp 
+    | eval serial_vdom = serial."";"".vdom 
+    | stats count by serial_vdom addrgrp 
+    | fields serial_vdom addrgrp]
+`spa_comment_macro(""EODS"")` 
+| eval spa_flag=if(isnotnull(addrgrp),""false"", ""true""), spa_identity=if(isnotnull(asset_name), asset_name, ""Unknown""), spa_extra=if(spa_flag=""false"", (""Device: "".asset_name."", VDOM: "".vdom+"" - Is configured with a blacklist.""), (""Device: "".asset_name."", VDOM: "".vdom+"" - Is NOT configured with a blacklist.""))
+"
+12030103,"spa_12030103_cloudBoundaryBlacklisting_search","`spa_azureResourceGraphData_macro` earliest=-7d@d latest=@d
+| stats count by asset_name
+| fields asset_name
+| join type=left asset_name 
+    [| tstats values(All_Traffic.rule) as rule from datamodel=Network_Traffic.All_Traffic where sourcetype=pan:traffic earliest=-10d@d latest=@d All_Traffic.action=blocked (All_Traffic.rule=EDL-Blacklisted* OR All_Traffic.rule=IOC_Block-Outbound* OR All_Traffic.rule=Deny-Outbound* OR All_Traffic.rule=proxy-block) by All_Traffic.dvc 
+    | rename All_Traffic.dvc as asset_name]
+`spa_comment_macro(""EODS"")` 
+| eval spa_flag=if(isnotnull(rule),""false"", ""true""), spa_identity=if(isnotnull(asset_name), asset_name, ""Unknown""), spa_extra=if(spa_flag=""false"", (""Device: "".asset_name."" - Is configured with a blacklist.""), (""Device: "".asset_name."" - Is NOT configured with a blacklist.""))
+"
+12050101,"spa_12050101_onPremBoundaryTrafficLogging_search","| tstats values(HardwareAssetInventory.Serial) as Serial from datamodel=Hardware_Asset_Inventory.HardwareAssetInventory where (earliest=-48h@h latest=@h HardwareAssetInventory.Network_Function=""Firewall"" HardwareAssetInventory.Manufacturer=""Fortinet"") by HardwareAssetInventory.IP_Address, HardwareAssetInventory.Caption 
+| eval serial=upper(Serial), asset_name=upper('HardwareAssetInventory.Caption') 
+| fields serial asset_name 
+| join type=left serial [search `spa_trafficLoggingPolicies_macro` earliest=-5d@d latest=@d
+| stats values(results.logtraffic) as traffic by serial ]
+`spa_comment_macro(""EODS"")` 
+| stats values(asset_name) as  asset_name values(traffic) as traffic by serial
+| eval spa_flag=if(isnotnull(traffic), ""false"", ""true""), spa_identity=if(isnotnull(asset_name), asset_name, Unknown), spa_extra=(if(isnotnull(traffic), ""Device: "".spa_identity.""Is configured to log traffic"", ""Device "".spa_identity."" not configured to log traffic""))
+
+"
+12050102,"spa_12050102_dataCenterBoundaryTrafficLogging_search","| tstats values(HardwareAssetInventory.Serial) as Serial from datamodel=Hardware_Asset_Inventory.HardwareAssetInventory where (earliest=-48h@h latest=@h HardwareAssetInventory.Network_Function=""Firewall"" HardwareAssetInventory.Manufacturer=""Checkpoint"") by HardwareAssetInventory.IP_Address, HardwareAssetInventory.Caption 
+| eval serial = upper(Serial), asset_name = upper('HardwareAssetInventory.Caption') 
+| fields serial asset_name 
+| join type=left serial [search `spa_trafficLoggingPolicies_macro` earliest=-5d@d latest=@d
+| stats values(results.logtraffic) as traffic by serial ]
+`spa_comment_macro(""EODS"")` 
+| stats values(asset_name) as  asset_name values(traffic) as traffic by serial
+| eval spa_flag=if(isnotnull(traffic), ""false"", ""true""), spa_identity=if(isnotnull(asset_name), asset_name, Unknown), spa_extra=(if(isnotnull(traffic), ""Device: "".spa_identity.""Is configured to log traffic"", ""Device "".spa_identity."" not configured to log traffic""))
+
+"
+12050103,"spa_12050103_cloudBoundaryTrafficLogging_search","`spa_azureResourceGraphData_macro` earliest=-48h@h latest=@h
+| stats count by asset_name
+| fields asset_name
+| join type=left asset_name 
+    [| tstats values(All_Traffic.dvc) as asset_name FROM datamodel=Network_Traffic.All_Traffic WHERE sourcetype=pan:traffic earliest=-3d@d latest=@d  by All_Traffic.dvc
+    | eval events=1]
+`spa_comment_macro(""EODS"")` 
+| eval spa_flag=if(events=1, ""false"", ""true""), spa_identity=if(isnotnull(asset_name), asset_name, Unknown), spa_extra=if(events>0, ""Device: "".spa_identity.""Is configured to log traffic"",  ""Device "".spa_identity."" not configured to log traffic"")
+
+"
+12090101,"spa_12090101_onPremLocationsCoveredByWebProxy_search","`spa_assetInventoryData_macro` (asset_type=Server OR asset_type=Workstation) asset_status=ACTIVE asset_ip_address!=""-"" asset_ip_address!=""null"" internet_exposure_score>1
+| append [| tstats values(Web.ipam) as IPAM from datamodel=Web.Web where Web.src!=""-"" Web.src!=""null"" Web.src!=""unknown"" Web.ipam=* sourcetype=""zscalernss-web"" earliest=-5d@d latest=@d by Web.src |  eval monitored=1 | rename Web.src as asset_ip_address ]
+`spa_comment_macro(""EODS"")` 
+| stats values(monitored) as monitored max(internet_exposure_score) as  score values(IPAM) as IPAM values(asset_name) as asset_name by asset_ip_address
+| mvexpand IPAM
+| mvexpand asset_name
+| where isnotnull(score)
+| eval spa_flag=if(isnull(monitored) and score=2, ""true"", ""false""), spa_identity=if(isnotnull(asset_name), asset_name, asset_ip_address), spa_extra=if(spa_flag=""false"", ""Asset: "" .asset_name."" monitored by Web Proxy"", ""Asset: "" .asset_name."" not monitored by Web Proxy"")
+"
+12090102,"spa_12090102_DataCenterLocationsCoveredByWebProxy_search","index=fake
+| eval spa_flag=if(isnotnull(traffic), ""false"", ""true""), spa_identity=if(isnotnull(asset_name), asset_name, Unknown), spa_extra=(if(isnotnull(traffic), ""Device: "".spa_identity.""Is configured to log traffic"", ""Device "".spa_identity."" not configured to log traffic""))
+
+"
+12090103,"spa_12090103_AzureCloudLocationsCoveredByWebProxy_search","`spa_assetInventoryData_macro` (asset_type=Server OR asset_type=Workstation) asset_status=ACTIVE earliest=-48h@h latest=@d  internet_exposure_score>1 | fields asset_name asset_ip_address internet_exposure_score
+| eval inventory=1| stats max(internet_exposure_score) as score values(inventory) as inventory by asset_ip_address, asset_name
+| join type=left asset_ip_address 
+[ | tstats values(Web.spa_proxy_ip) as asset_ip_address from datamodel=Web.Web Where sourcetype=""barracuda:web"" earliest=-7d@d latest=@d by Web.spa_proxy_ip
+| eval monitored=1
+| stats values(asset_ip_address) as asset_ip_addresses, values(monitored) as monitored by asset_ip_address
+]
+| join type=left asset_ip_address [search `spa_azureResources_macro` earliest=-7d@d latest=@d
+| stats values(subscriptionId) as subscription values(location) as location by privateIPAddress 
+| rename privateIPAddress as asset_ip_address]
+`spa_comment_macro(""EODS"")` 
+| stats values(monitored) as monitored max(score) as score values(subscription) as subscription values(location) as location by asset_ip_address, asset_name
+| where isnotnull(subscription)
+| eval spa_flag=if(isnull(monitored) and score=2, ""true"", ""false""), spa_identity=if(isnotnull(asset_name), asset_name, asset_ip_address), spa_extra=if(spa_flag=""false"", """" .asset_name."" with subscription: "".subscription."" and zone: "".location."" monitored by Web Proxy"", """" .asset_name."" with subscription: "".subscription."" and zone: "".location."" not monitored by Web Proxy"")
+"
+12110101,"spa_12110101_normalVPNAccountsWithMFA_search","| tstats count FROM datamodel=Compute_Inventory WHERE (earliest=-3d@d latest=-1d@d)
+    AND All_Inventory.description=""Identity Master DB""
+    AND All_Inventory.status=""ACTIVE""
+    AND All_Inventory.enabled =""true""
+    AND All_Inventory.User.user_id!=""A-*"" AND All_Inventory.User.user_id!=""S-*""
+    BY All_Inventory.User.user_id, _time span=1h, source
+    `spa_comment_macro(""EODS"")`
+| eventstats max(_time) as latest_date
+| eval latest_date=strptime(strftime(latest_date, ""%Y%m%d""), ""%Y%m%d"")
+| where _time>=latest_date
+| rename All_Inventory.User.user_id as user_id
+| fields user_id, source
+| union
+    [| tstats count FROM datamodel=Compute_Inventory WHERE (earliest=-3d@d latest=-0d@d) AND All_Inventory.description=""MS Active Directory Inventory"" AND source=""user_asset""
+        AND All_Inventory.User.user_id!=""A-*"" AND All_Inventory.User.user_id!=""S-*""
+        AND All_Inventory.status=""ACTIVE""
+        AND All_Inventory.enabled =""true""
+        BY All_Inventory.User.user_id, All_Inventory.User.spa_mfa_enabled, All_Inventory.User.spa_VPN_enabled, All_Inventory.enabled, _time span=1h, source
+    | rename All_Inventory.User.user_id as user_id, All_Inventory.User.spa_mfa_enabled as spa_mfa_enabled, All_Inventory.enabled as enabled, All_Inventory.User.spa_VPN_enabled as spa_VPN_enabled
+    | eventstats max(_time) as latest_date
+    | eval latest_date=strptime(strftime(latest_date, ""%Y%m%d""), ""%Y%m%d"")
+    | where _time>=latest_date AND enabled=""true"" AND spa_VPN_enabled=""true""
+    | fields user_id, source, spa_mfa_enabled
+        ]
+| eventstats dc(source) as count_source by user_id
+| search count_source>1 AND source=""user_asset""
+| eval match=if(spa_mfa_enabled=""true"", 1, 0)
+| eval spa_flag=case(match=1, ""false"", 1=1, ""true""), spa_identity=user_id, spa_extra=if(match=1, ""VPN account is enrolled for MFA"", ""VPN account is NOT enrolled for MFA"")
+    "
+12110201,"spa_12110201_normalAccountsAccessingAzureWithMFA_search","| tstats count FROM datamodel=Compute_Inventory WHERE (earliest=-3d@d latest=-1d@d)
+    AND All_Inventory.description=""Identity Master DB""
+    AND All_Inventory.status=""ACTIVE""
+    AND All_Inventory.enabled =""true""
+    AND All_Inventory.User.user_id!=""A-*"" AND All_Inventory.User.user_id!=""S-*""
+    BY All_Inventory.User.user_id, _time span=1h, source
+    `spa_comment_macro(""EODS"")`
+| rename All_Inventory.User.user_id as user_id
+| eventstats max(_time) as latest_date
+| eval latest_date=strptime(strftime(latest_date, ""%Y%m%d""), ""%Y%m%d""), user_id=lower(user_id)
+| where _time>=latest_date
+| fields user_id, source
+| union
+    [| tstats count FROM datamodel=Compute_Inventory WHERE (earliest=-3d@d latest=-0d@d) AND All_Inventory.description=""MS Active Directory Inventory"" AND source=""user_asset""
+        AND All_Inventory.User.user_id!=""A-*"" AND All_Inventory.User.user_id!=""S-*""
+        AND All_Inventory.enabled =""true""
+        BY All_Inventory.User.user_id, All_Inventory.User.spa_mfa_enabled, All_Inventory.User.spa_email_address, _time span=1h, source, All_Inventory.User.spa_mfa_corpOnly_enabled
+    | rename All_Inventory.User.user_id as user_id, All_Inventory.User.spa_mfa_enabled as spa_mfa_enabled, All_Inventory.User.spa_email_address as spa_email_address, All_Inventory.User.spa_mfa_corpOnly_enabled as spa_mfa_corpOnly_enabled
+    | eventstats max(_time) as latest_date
+    | eval latest_date=strptime(strftime(latest_date, ""%Y%m%d""), ""%Y%m%d"") , spa_email_address= lower(replace(spa_email_address, ""\@.+"","""")), user_id=lower(user_id)
+    | where _time>=latest_date
+    | fields user_id, source, spa_mfa_enabled, spa_email_address, spa_mfa_corpOnly_enabled
+        ]
+| eventstats dc(source) as count_source by user_id
+| search count_source>1 AND source=""user_asset""
+| fields - _time, count_source
+| eval joinid=mvappend(user_id, spa_email_address)
+| mvexpand joinid
+| search joinid!=""unknown""
+| stats count as count_ by user_id, joinid, spa_mfa_enabled, source, spa_mfa_corpOnly_enabled
+| union
+    [| tstats count FROM datamodel=Authentication WHERE (earliest=-24h) AND sourcetype=""eventhub:signin"" BY Authentication.spa_user
+    | eval source=""Azure_signIN""
+    | rename Authentication.spa_user as joinid
+    | fields joinid, source
+        ]
+| eventstats dc(source) as count_ by joinid
+| search source=""user_asset"" AND count_ =""2""
+| stats count as count_ by user_id, spa_mfa_enabled, spa_mfa_corpOnly_enabled
+| eval match=if(spa_mfa_enabled=""true"" OR spa_mfa_corpOnly_enabled=""true"", 1, 0)
+| eval spa_flag=case(match=1, ""false"", 1=1, ""true""), spa_identity=user_id, spa_extra=if(match=1, ""The account is enrolled for MFA"", ""The account is NOT enrolled for MFA"")
+    "
+13040101,"spa_13040101_fileShareSession_search","| tstats count as count_session_unknown_action from datamodel=Web WHERE (earliest=-12h ) AND sourcetype=""zscalernss-web"" AND Web.spa_appclass=""File Share"" AND Web.action=""unknown"" BY web.recordid, Web.spa_app_name, Web.category
+`spa_comment_macro(""EODS"")`
+| rename web.recordid as spa_identity, Web.spa_app_name as app_name, Web.category as category
+| eval spa_extra=""app_name: "" + app_name + ""   "" + ""category: "" + category
+| eval spa_flag=""true""
+"
+13040201,"spa_13040201_webmailSession_search","| tstats count as count_session_unknown_action from datamodel=Web WHERE (earliest=-12h ) AND sourcetype=""zscalernss-web"" AND Web.spa_appclass=""Webmail"" AND Web.action=""unknown"" BY web.recordid, Web.spa_app_name, Web.category
+`spa_comment_macro(""EODS"")`
+| rename web.recordid as spa_identity, Web.spa_app_name as app_name, Web.category as category
+| eval spa_extra=""app_name: "" + app_name + ""   "" + ""category: "" + category
+| eval spa_flag=""true""
+"
+13060101,"spa_13060101_encryptedWorkstation_search","| tstats count FROM datamodel=Compute_Inventory WHERE (earliest=-5d@d)
+    AND All_Inventory.description=""MDLZ Asset Inventory""
+    AND All_Inventory.status=""ACTIVE""
+    AND All_Inventory.enabled =""true""
+    AND All_Inventory.family =""Workstation""
+    AND All_Inventory.Custom_Inventory.spa_network_segment=""IT""
+    AND All_Inventory.Custom_Inventory.spa_eligible_for_encryption=""ACTIVE""
+    BY All_Inventory.dest, All_Inventory.family, _time span=1h All_Inventory.Custom_Inventory.spa_eligible_for_encryption, All_Inventory.Custom_Inventory.spa_asset_encryption
+    `spa_comment_macro(""EODS"")`
+| eventstats max(_time) as latest_date
+| eval latest_date=strptime(strftime(latest_date, ""%Y%m%d""), ""%Y%m%d"")
+| where _time>=latest_date
+| rename All_Inventory.dest as workstation_name, All_Inventory.family as asset_type, All_Inventory.Custom_Inventory.spa_eligible_for_encryption as eligible_for_encryption, All_Inventory.Custom_Inventory.spa_asset_encryption as asset_encryption
+| eval match=if(asset_encryption=eligible_for_encryption,1,0)
+| fields - latest_date, count, _time
+| eval spa_flag=case(match=""1"", ""false"", 1=1, ""true""), spa_identity=workstation_name
+| eval spa_extra=if((match=""1""), ""Encrypted workstation"", ""Not encrypted workstation"")
+    "
+14010101,"spa_14010101_onPremLocations_search","| tstats count FROM datamodel=""Hardware_Asset_Inventory"" where (earliest=-168h@h) HardwareAssetInventory.Network_Function=""Firewall"" HardwareAssetInventory.Site_Type=""*Manufacturing*"" by HardwareAssetInventory.Serial HardwareAssetInventory.IPAM_Code 
+`spa_comment_macro(""EODS"")`
+| eval serial=UPPER('HardwareAssetInventory.Serial'), IPAM='HardwareAssetInventory.IPAM_Code', src=""Source 1"" 
+| union 
+    [ search index=mdlz_network_fortinet_cat1 sourcetype=_json source=fortigate_api_interfaces earliest=-48h@h
+    | eval ia=case(UPPER('results.alias')=""DMZ"" OR UPPER('results.alias')=""CCN-DMZ"", ""DMZ"", UPPER('results.alias')=""CCN"" OR UPPER('results.alias')=""EMS"", ""CCN"", UPPER('results.alias')=""OA"" OR UPPER('results.alias')=""LAN"" OR UPPER('results.alias')=""WAN-RTR"" OR UPPER('results.alias')=""WAN-CORE-SEG"" OR UPPER('results.alias')=""ISFW-WAN"" OR UPPER('results.alias')=""ISFW-LAN"", ""OA"", true(), ""Other""), serial=UPPER(serial), src=""Source 2""
+    | stats values(src) as src, values(ia) as interface_aliases by serial ]
+| stats values(src) as src, values(interface_aliases) as interface_aliases, values(IPAM) as IPAM by serial
+| where src=""Source 1""
+| eval match=case(mvcount(interface_aliases)=2 AND interface_aliases!=""Other"", 1, mvcount(interface_aliases)>2, 1, true(), 0)
+| stats values(serial) as serial, values(src) as src, values(interface_aliases) as interface_aliases, sum(match) as match by IPAM
+| eval spa_flag=case(match>0, ""false"", 1=1, ""true""), spa_identity=IPAM, spa_extra=case(match>0, ""On-prem firewall with network segregation"", true(), ""On-prem firewall WITHOUT network segregation"")
+"
+14020101,"spa_14020101_firewallVlanFiltering_search","| tstats values(HardwareAssetInventory.Serial) as Serial from datamodel=Hardware_Asset_Inventory.HardwareAssetInventory where (earliest=-7d@d latest=@d HardwareAssetInventory.Network_Function=""Firewall"" HardwareAssetInventory.Manufacturer=""Fortinet"") by HardwareAssetInventory.IP_Address, HardwareAssetInventory.Caption 
+| eval serial = upper(Serial), asset_name = upper('HardwareAssetInventory.Caption') 
+| fields serial asset_name 
+| join serial 
+    [| search `spa_firewallRoutingTables_macro` earliest=-48h@h latest=@h 
+    | stats values(vdom) as vdom by serial] 
+| makemv delim="" "" vdom 
+| mvexpand vdom 
+| eval serial_vdom = serial."";"".vdom 
+| join type=left serial_vdom 
+    [ | search `spa_firewallImplicitPolicies_macro` ""implicit.action""=drop ""implicit.from_zone{}""=any ""implicit.source{}.start""=""0.0.0.0"" ""implicit.source{}.end""=""255.255.255.255"" earliest=-48h@h latest=@h
+    | rename implicit.action as action 
+    | eval serial_vdom = serial."";"".vdom 
+    | stats count by serial_vdom action 
+    | fields serial_vdom action]
+`spa_comment_macro(""EODS"")` 
+| eval spa_flag=if(isnotnull(action),""false"", ""true""), spa_identity=if(isnotnull(asset_name), asset_name, ""Unknown""), spa_extra=if(spa_flag=""false"", (""Device: "".asset_name."", Serial: "".serial."", VDOM: "".vdom+"" - Has filtering policies applied between VLANs""), (""Device: "".asset_name."", Serial: "".serial."", VDOM: "".vdom+"" - Does NOT have filtering policies applied between VLANs""))
+"
+15010101,"spa_15010101_onPremLocations_search","| tstats count FROM datamodel=""Hardware_Asset_Inventory"" where (earliest=-7d@d) HardwareAssetInventory.Network_Function=""Wireless Access Point"" HardwareAssetInventory.Status=""Up"" by HardwareAssetInventory.IPAM_Code 
+`spa_comment_macro(""EODS"")`
+| eval IPAM='HardwareAssetInventory.IPAM_Code', src=""Source 1"" 
+| union 
+    [ search index=mdlz_network_ciscoise_cat1 Called_Station_ID=* 
+    | rex field=Called_Station_ID "".{18}.+:(?P<IPAM>.{4,6})-""
+    | eval src=""Source 2"" 
+    | stats values(src) as src by IPAM ]
+| eval IPAM=case(IPAM=""BOISE"", ""BOIS"", IPAM=""CZOPH"", ""CZOPA"", IPAM=""GBCRE"", ""GBCDI"", IPAM=""GBWOK"", ""GBWO1"", IPAM=""MXMTYP"", ""MTYP"", IPAM=""PLWAW"", ""PLWAR"", IPAM=""SKBRA"", ""SKBTS"", IPAM=""TRIST"", ""TRGEB"", true(), IPAM)
+| stats values(src) as src by IPAM
+| where src=""Source 2""
+| eval match=if(mvcount(src)>1, 1, 0)
+| eval spa_flag=case(match=1, ""false"", 1=1, ""true""), spa_identity=IPAM, spa_extra=case(match=1, ""Location with authorized WAP present in network inventory"", true(), ""Location WITHOUT authorized WAP present in network inventory"")
+"
+15100101,"spa_15100101_ipamLocations_search","`spa_networkInventoryData_macro` SSID=""*:MDLZ*:*"" earliest=-14d@d
+`spa_comment_macro(""EODS"")`
+| rex field=SSID max_match=0 ""MDLZ(?P<NetworkType>.+):(?P<IPAM>\w+)""
+| eval IPAM=case(lower(IPAM) LIKE ""bv_%"", ""GBBHM"", lower(IPAM) LIKE ""default%"", null(), true(), IPAM)
+| stats values(NetworkType) as NetworkType by IPAM
+| union 
+    [ | tstats summariesonly=t count as count from datamodel=Performance WHERE (earliest=-48h@h) AND sourcetype=""solarwinds:alerts"" by All_Performance.location 
+    | rename All_Performance.location as IPAM ]
+| stats values(NetworkType) as NetworkType by IPAM
+| where lower(NetworkType) LIKE ""%corporate%""
+| eval match=if(lower(NetworkType) LIKE ""%byod%"" OR lower(NetworkType) LIKE ""%visitor%"" OR lower(NetworkType) LIKE ""%hotspot%"", 1, 0), spa_flag=case(match=1, ""false"", 1=1, ""true""), spa_identity=IPAM, spa_extra=case(match=1, ""Site with CORPORATE Wi-Fi network enabled having BYOD, VISITOR or HOTSPOT SSIDs"", true(), ""Site with CORPORATE Wi-Fi network enabled NOT having BYOD, VISITOR or HOTSPOT SSIDs"")
+"
+16010101,"spa_16010101_authenticationSystemsInCmdb_search","index=fake
+`spa_comment_macro(""EODS"")`
+"
+16020101,"spa_16020101_servicesWithSingleSignOn_search","(`spa_authenticationData_macro` sourcetype=""splunk-audit*"" earliest=-30d@d latest=now status=success) OR (`spa_assetInventoryData_macro` earliest=-300d@d latest=now  source=""SNow_cmdb_ci_Business_Applications_16020101.csv"")
+`spa_comment_macro(""EODS"")`
+| eval connectionid = if(connectionid="""",null(),connectionid)
+| eval connectionid = if(isnull(connectionid),""NULL"",connectionid)
+| eval name = if(name="""",null(),name)
+| eval name = if(isnull(name),""NULL"",name)
+| dedup connectionid, name
+| eval sso = if(source!=""SNow_cmdb_ci_Business_Applications_16020101.csv"", 1, 0)
+| eval cmdb = if(source=""SNow_cmdb_ci_Business_Applications_16020101.csv"", 1, 0)
+| table connectionid, sso, cmdb, name
+| eventstats sum(cmdb) as  count_cmdb
+| search sso=1 AND connectionid!=""NULL""
+| eval spa_flag=case(sso=1, ""false"", 1=1, ""true""), spa_identity=connectionid
+| eval spa_extra=if(sso=1,""sso authentication"", ""cmdb authentication"")
+"
+16030101,"spa_16030101_normalAccountsWithMultiFactorAuth_search","| tstats count FROM datamodel=Compute_Inventory WHERE (earliest=-3d@d latest=-1d@d)
+    AND All_Inventory.description=""Identity Master DB""
+    AND All_Inventory.status=""ACTIVE""
+    AND All_Inventory.enabled =""true""
+    AND All_Inventory.User.user_id!=""A-*"" AND All_Inventory.User.user_id!=""S-*""
+    BY All_Inventory.User.user_id, _time span=1h
+    `spa_comment_macro(""EODS"")`
+| eventstats max(_time) as latest_date
+| eval latest_date=strptime(strftime(latest_date, ""%Y%m%d""), ""%Y%m%d""), source=""idm""
+| where _time>=latest_date
+| rename All_Inventory.User.user_id as user_id
+| fields user_id, source
+| union
+    [| tstats count FROM datamodel=Compute_Inventory WHERE (earliest=-3d@d latest=-0d@d) AND All_Inventory.description=""MS Active Directory Inventory"" AND source=""user_asset""
+        AND All_Inventory.User.user_id!=""A-*"" AND All_Inventory.User.user_id!=""S-*""
+        AND All_Inventory.status=""ACTIVE""
+        AND All_Inventory.enabled =""true""
+        BY All_Inventory.User.user_id, All_Inventory.User.spa_mfa_enabled, _time span=1h, All_Inventory.User.spa_mfa_corpOnly_enabled
+    | rename All_Inventory.User.user_id as user_id, All_Inventory.User.spa_mfa_enabled as spa_mfa_enabled, All_Inventory.User.spa_mfa_corpOnly_enabled as spa_mfa_corpOnly_enabled
+    | eventstats max(_time) as latest_date
+    | eval latest_date=strptime(strftime(latest_date, ""%Y%m%d""), ""%Y%m%d""), source=""ad""
+    | where _time>=latest_date
+    | fields user_id, source, spa_mfa_enabled, spa_mfa_corpOnly_enabled
+        ]
+| eventstats values(spa_mfa_enabled) as spa_mfa_enabled,  values(spa_mfa_corpOnly_enabled) as spa_mfa_corpOnly_enabled, dc(source) as count_source by user_id
+| eval spa_mfa_enabled=if(isnull(spa_mfa_enabled), ""false"", spa_mfa_enabled), spa_mfa_corpOnly_enabled=if(isnull(spa_mfa_corpOnly_enabled), ""false"", spa_mfa_corpOnly_enabled)
+| search count_source=""2"" AND spa_mfa_corpOnly_enabled=""false""
+| eval match=if(spa_mfa_enabled=""true"", 1, 0)
+| eval spa_flag=case(match=1, ""false"", 1=1, ""true""), spa_identity=user_id, spa_extra=if(match=1, ""Has MFA"", ""Does not have MFA"")
+    "
+16030102,"spa_16030102_adminAccountsWithMultiFactorAuth_search","| tstats count FROM datamodel=Compute_Inventory WHERE (earliest=-10d@d latest=-0d@d)  AND All_Inventory.description=""MS Active Directory Inventory""
+    AND All_Inventory.User.user_id=""A-*""
+    AND All_Inventory.User.spa_mfa_corpOnly_enabled=""false""
+    BY All_Inventory.User.user_id, All_Inventory.User.spa_mfa_enabled, All_Inventory.enabled, _time span=1h
+| rename All_Inventory.User.user_id as user_id, All_Inventory.User.spa_mfa_enabled as spa_mfa_enabled, All_Inventory.enabled as enabled
+| eventstats max(_time) as latest_date
+| eval latest_date=strptime(strftime(latest_date, ""%Y%m%d""), ""%Y%m%d"")
+| where _time>=latest_date AND enabled=""true""
+| eval match=if(spa_mfa_enabled=""true"", 1, 0)
+| eval spa_flag=case(match=1, ""false"", 1=1, ""true""), spa_identity=user_id, spa_extra=if(match=1, ""Has MFA"", ""Does not have MFA"")
+"
+16030201,"spa_16030201_normalAccountsWithCorporateOnlyAccess_search","| tstats count FROM datamodel=Compute_Inventory WHERE (earliest=-3d@d latest=-1d@d)
+    AND All_Inventory.description=""Identity Master DB""
+    AND All_Inventory.status=""ACTIVE""
+    AND All_Inventory.enabled =""true""
+    AND All_Inventory.User.user_id!=""A-*"" AND All_Inventory.User.user_id!=""S-*""
+    BY All_Inventory.User.user_id, _time span=1h
+    `spa_comment_macro(""EODS"")`
+| eventstats max(_time) as latest_date
+| eval latest_date=strptime(strftime(latest_date, ""%Y%m%d""), ""%Y%m%d""), source=""idm""
+| where _time>=latest_date
+| rename All_Inventory.User.user_id as user_id
+| fields user_id, source
+| union
+    [| tstats count FROM datamodel=Compute_Inventory WHERE (earliest=-3d@d latest=-0d@d) AND All_Inventory.description=""MS Active Directory Inventory"" AND source=""user_asset""
+        AND All_Inventory.User.user_id!=""A-*"" AND All_Inventory.User.user_id!=""S-*""
+        AND All_Inventory.status=""ACTIVE""
+        AND All_Inventory.enabled =""true""
+        BY All_Inventory.User.user_id, All_Inventory.User.spa_mfa_enabled, _time span=1h, All_Inventory.User.spa_mfa_corpOnly_enabled
+    | rename All_Inventory.User.user_id as user_id, All_Inventory.User.spa_mfa_enabled as spa_mfa_enabled, All_Inventory.User.spa_mfa_corpOnly_enabled as spa_mfa_corpOnly_enabled
+    | eventstats max(_time) as latest_date
+    | eval latest_date=strptime(strftime(latest_date, ""%Y%m%d""), ""%Y%m%d""), source=""ad""
+    | where _time>=latest_date
+    | fields user_id, source, spa_mfa_enabled, spa_mfa_corpOnly_enabled
+        ]
+| eventstats values(spa_mfa_enabled) as spa_mfa_enabled,  values(spa_mfa_corpOnly_enabled) as spa_mfa_corpOnly_enabled, dc(source) as count_source by user_id
+| eval spa_mfa_enabled=if(isnull(spa_mfa_enabled), ""false"", spa_mfa_enabled), spa_mfa_corpOnly_enabled=if(isnull(spa_mfa_corpOnly_enabled), ""false"", spa_mfa_corpOnly_enabled)
+| search count_source=""2"" AND spa_mfa_enabled=""false""
+| eval match=if(spa_mfa_corpOnly_enabled=""true"", 1, 0)
+| eval spa_flag=case(match=1, ""false"", 1=1, ""true""), spa_identity=user_id, spa_extra=if(match=1, ""enrolled for Only Corporate Access"", ""NOT enrolled for Only Corporate Access"")
+    "
+16030202,"spa_16030202_adminAccountsWithCorporateOnlyAccess_search","| tstats count FROM datamodel=Compute_Inventory WHERE (earliest=-10d@d latest=-0d@d)  AND All_Inventory.description=""MS Active Directory Inventory""
+    AND All_Inventory.User.user_id=""A-*""
+    AND All_Inventory.User.spa_mfa_enabled=""false""
+    BY All_Inventory.User.user_id, All_Inventory.User.spa_mfa_corpOnly_enabled, All_Inventory.enabled, _time span=1h
+| rename All_Inventory.User.user_id as user_id, All_Inventory.User.spa_mfa_corpOnly_enabled as spa_mfa_corpOnly_enabled, All_Inventory.enabled as enabled
+| eventstats max(_time) as latest_date
+| eval latest_date=strptime(strftime(latest_date, ""%Y%m%d""), ""%Y%m%d"")
+| where _time>=latest_date AND enabled=""true""
+| eval match=if(spa_mfa_corpOnly_enabled=""true"", 1, 0)
+| eval spa_flag=case(match=1, ""false"", 1=1, ""true""), spa_identity=user_id, spa_extra=if(match=1, ""enrolled for Only Corporate Access"", ""NOT enrolled for Only Corporate Access"")
+"
+16060101,"spa_16060101_accountsInventory_search","| tstats summariesonly=t count FROM datamodel=Compute_Inventory WHERE (earliest=-48h@h) sourcetype=vwIdentityMasterWithMgrInfoAll BY All_Inventory.User.user_id 
+`spa_comment_macro(""EODS"")` 
+| eval idx=""IDM"", user_name=lower('All_Inventory.User.user_id')
+| union 
+    [| tstats summariesonly=t count FROM datamodel=Compute_Inventory WHERE (earliest=-48h@h) sourcetype=stash All_Inventory.family=AD_User BY All_Inventory.User.user_id 
+    | eval idx=""AD"", user_name=lower('All_Inventory.User.user_id') ]
+| stats values(idx) as idxs by user_name 
+| eval match=if(mvcount(idxs)>1,1,0) 
+| search idxs=IDM 
+| eval spa_flag=case(match=1, ""false"", 1=1, ""true""), spa_identity=user_name, spa_extra=case(match=1, ""User available in AD"", true(), ""User NOT available in AD"")
+"
+16070101,"spa_16070101_terminatedAccountsInventoryCompliance_search","| tstats summariesonly=t count FROM datamodel=Compute_Inventory WHERE (earliest=-48h@h) sourcetype=vwIdentityMasterWithMgrInfoAll BY All_Inventory.User.user_id All_Inventory.status sourcetype
+| eval status_IDM='All_Inventory.status'
+`spa_comment_macro(""EODS"")`
+| union 
+    [ | tstats summariesonly=t count FROM datamodel=Compute_Inventory WHERE (earliest=-48h@h) sourcetype=stash All_Inventory.family=AD_User BY All_Inventory.User.user_id All_Inventory.status sourcetype
+    | eval status_AD='All_Inventory.status' ]
+| eval user_name=UPPER('All_Inventory.User.user_id')
+| stats values(sourcetype) as srct, values(status_IDM) as status_IDM, values(status_AD) as status_AD by user_name
+| where srct=""vwIdentityMasterWithMgrInfoAll"" AND upper(status_IDM) LIKE ""INACTIVE""
+| eval match=if(mvcount(srct)>1 AND upper(status_AD) LIKE ""INACTIVE"", 1, 0)
+| eval spa_flag=case(match=1, ""false"", 1=1, ""true""), spa_identity=user_name, spa_extra=case(match=1, ""User disabled in AD"", true(), ""User NOT disabled in AD"")
+"
+16080101,"spa_16080101_normalOrphanedAccounts_search","`spa_identityInventoryData_macro` account_name=*  identity!=""A-*"" identity!=""P-*"" identity!=""S-*"" NOT  manager=""*"" earliest=-7d@d latest=@d
+`spa_comment_macro(""EODS"")` 
+| eval match=if(like(userAccountControl, ""%ACCOUNTDISABLE%""), 1, 0), spa_flag=case(match=1, ""false"", 1=1, ""true""), spa_identity=account_name, spa_extra=case(match=1, ""Disabled Orphan"", true(), ""Orphan"")
+"
+16080102,"spa_16080102_adminOrphanedAccounts_search","`spa_identityInventoryData_macro` account_name=*  identity=""A-*"" NOT  manager=""*"" earliest=-7d@d latest=@d
+`spa_comment_macro(""EODS"")` 
+| eval match=if(like(userAccountControl, ""%ACCOUNTDISABLE%""), 1, 0), spa_flag=case(match=1, ""false"", 1=1, ""true""), spa_identity=account_name, spa_extra=case(match=1, ""Disabled Orphan"", true(), ""Orphan"")
+"
+16080103,"spa_16080103_privilegedOrphanedAccounts_search","`spa_identityInventoryData_macro` account_name=*  identity=""P-*"" NOT  manager=""*"" earliest=-7d@d latest=@d
+`spa_comment_macro(""EODS"")` 
+| eval match=if(like(userAccountControl, ""%ACCOUNTDISABLE%""), 1, 0), spa_flag=case(match=1, ""false"", 1=1, ""true""), spa_identity=account_name, spa_extra=case(match=1, ""Disabled Orphan"", true(), ""Orphan"")
+"
+16080104,"spa_16080104_serviceOrphanedAccounts_search","`spa_identityInventoryData_macro` account_name=*  identity=""S-*"" NOT  manager=""*"" earliest=-7d@d latest=@d
+`spa_comment_macro(""EODS"")` 
+| eval match=if(like(userAccountControl, ""%ACCOUNTDISABLE%""), 1, 0), spa_flag=case(match=1, ""false"", 1=1, ""true""), spa_identity=account_name, spa_extra=case(match=1, ""Disabled Orphan"", true(), ""Orphan"")
+"
+16090101,"spa_16090101_dormantAccounts_search","`spa_identityInventoryData_macro` account_name=* earliest=-7d@d
+| eval lastLogonTimestamp_epoch=strptime(lastLogonTimestamp,""%Y-%m-%dT%H:%M:%S.%6N""), days = round((now()-lastLogonTimestamp_epoch)/86400,0)
+| fillnull value=""61"" days
+| search days>60
+`spa_comment_macro(""EODS"")`
+| eval disabled_account=if(match(userAccountControl,""ACCOUNTDISABLE.*""), 1, 0)
+| eval spa_flag=if(disabled_account=""1"", ""false"", ""true""), spa_identity=identity, spa_extra=(""Account Control: "".userAccountControl)
+"
+16100101,"spa_16100101_normalAccountsExpirationCompliance_search","(earliest=-7d@d `spa_identityInventoryData_macro` source=user_asset account_status=ACTIVE (account_name!=""p-*"" AND account_name!=""a-*"")) OR (earliest=-24h@h `spa_identityInventoryData_macro` Role=C Status=A)
+| eval accountExpires_epoch=strptime(accountExpires,""%Y-%m-%dT%H:%M:%S.%6N""), GlobalID=lower(GlobalID), accountExpires_epoch2=strptime(ExpDate,""%m/%d/%Y"")
+| eval Normal_Accounts = coalesce(GlobalID, account_name), accountExpires_epoch3=coalesce(accountExpires_epoch2, accountExpires_epoch),  days = round((accountExpires_epoch3-now())/60/60/24,0)
+| stats values(GlobalID) as GlobalID values(account_name) as account_name by Normal_Accounts days 
+| eval check = if(GlobalID == account_name, ""false"", ""true"")
+| search check=""false""
+`spa_comment_macro(""EODS"")` 
+| eval spa_flag=if(days>180, ""true"", ""false""), spa_identity=account_name, spa_extra=(""Days Left: "".days) 
+"
+16100102,"spa_16100102_adminAccountsExpirationCompliance_search","earliest=-7d@d `spa_identityInventoryData_macro` source=user_asset account_status=ACTIVE account_name=""a-*""  
+| eval accountExpires_epoch=strptime(accountExpires,""%Y-%m-%dT%H:%M:%S.%6N"") 
+| eval days = round((accountExpires_epoch-now())/60/60/24,0)
+| eval days=if(isnull(days), ""900"", days)
+`spa_comment_macro(""EODS"")` 
+| eval spa_flag=if(days>180, ""true"", ""false""), spa_identity=account_name, spa_extra=(""Expiration Date: "".accountExpires+"", Days Left: "".days)
+"
+16100103,"spa_16100103_privilegedAccountsExpirationCompliance_search","earliest=-7d@d `spa_identityInventoryData_macro` source=user_asset account_status=ACTIVE account_name=""p-*""  
+| eval accountExpires_epoch=strptime(accountExpires,""%Y-%m-%dT%H:%M:%S.%6N"") 
+| eval days = round((accountExpires_epoch-now())/60/60/24,0)
+| eval days=if(isnull(days), ""900"", days)
+`spa_comment_macro(""EODS"")` 
+| eval spa_flag=if(days>180, ""true"", ""false""), spa_identity=account_name, spa_extra=(""Expiration Date: "".accountExpires+"", Days Left: "".days)
+"
+16110101,"spa_16110101_lockSessionsAfterInactivity_search","(`spa_vulnerabilityData_macro` QID=105178 earliest=-30d@d latest=now) OR (`spa_assetInventoryData_macro` earliest=-7d@d latest=now (asset_type=Server OR asset_type=Workstation) AND asset_status=ACTIVE)
+| eval asset_name=trim(upper(asset_name), "" "")
+| eval DNS=trim(upper(DNS), "" "")
+| rex field=DNS mode=sed ""s/\..*$//""
+| rex field=asset_name mode=sed ""s/\..*$//""
+| eval host_name=if(isnull(asset_name),DNS,asset_name)
+`spa_comment_macro(""EODS"")`
+| stats values(index) as val_ by host_name
+| eval mv_count= mvcount(val_)
+| search mv_count=2 OR val_=mdlz_asset_inventory_cat1
+| eval match = if(mv_count=2, 1, 0)
+| eval spa_flag=case(match=0, ""false"", 1=1, ""true""), spa_identity=host_name
+| eval spa_extra=if(match=0, (""detected with QID for screensaver policy""), (""NOT detected with QID for screensaver policy""))
+"
+16120101,"spa_16120101_disabledAccountsActivity_search","index=imaginery
+`spa_comment_macro(""EODS"")`
+"
+19080101,"spa_19080101_casesWithExistingPriority_search","`spa_ticketData_macro` sourcetype=""siemplify*"" (Tag=""VIP User"" OR UserAssigned=""@Tier3"") earliest=-30d@d
+`spa_comment_macro(""EODS"")`
+| stats values(Tag) as Tag, values(UserAssigned) as UserAssigned by CaseId
+| eval pre_match=if(isnull(Tag) OR isnull(UserAssigned), 0, 1)
+| eventstats max(pre_match) as match
+| eval spa_flag=case(match=1, ""false"", 1=1, ""true""), spa_identity=CaseId, spa_extra=case(pre_match=1, ""Case with existing priority based on affected User or Asset criticality or associated risk with it"", true(), ""Case WITHOUT existing priority based on affected User or Asset criticality or associated risk with it"")
+"
