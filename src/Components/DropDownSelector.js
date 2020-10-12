@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { makeStyles } from '@material-ui/core/styles'
 import InputLabel from '@material-ui/core/InputLabel'
 import FormControl from '@material-ui/core/FormControl'
@@ -22,16 +22,20 @@ export default function SourceSelector({
   options,
   label,
   disabled,
+  source,
 }) {
   const classes = useStyles()
 
+  const [selected, setSelected] = useState('')
+
   const handleChange = (e) => {
+    setSelected(e.target.value)
     handleButton(e.target.value)
   }
 
   return (
     <FormControl variant="outlined" className={classes.formControl}>
-      <InputLabel htmlFor="outlined-age-native-simple"> {label}</InputLabel>
+      <InputLabel htmlFor="outlined-source-select"> {label}</InputLabel>
       <Select native onChange={handleChange} label={label} disabled={disabled}>
         <option aria-label="None" value="" />
         {options.map((opt, index) => (

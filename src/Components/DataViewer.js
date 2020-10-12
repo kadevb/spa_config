@@ -47,12 +47,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }))
 
-export default function DataViewer({
-  propItem,
-  done,
-  handleSubmit,
-  setFinishedItem,
-}) {
+export default function DataViewer({ propItem, done, setFinalizedItem }) {
   const classes = useStyles()
 
   const [currentItem, setCurrentItem] = useState(propItem)
@@ -62,9 +57,8 @@ export default function DataViewer({
   const [finished, setFinished] = useState(done)
 
   useEffect(() => {
-    setFinished(done)
     setCurrentItem({ ...currentItem, enabled: checked })
-    if (done) setFinishedItem(currentItem)
+    if (done) setFinalizedItem(currentItem)
     console.log(currentItem)
   }, [checked, done])
 
@@ -80,7 +74,7 @@ export default function DataViewer({
 
   return (
     <>
-      {currentItem.description ? (
+      {currentItem['description'] ? (
         <FormControl variant="outlined" className={classes.formControl}>
           <TextField
             id="description"
@@ -93,38 +87,45 @@ export default function DataViewer({
         </FormControl>
       ) : null}
 
-      <Grid className={classes.root} container justify="space-between">
-        <Grid item xs={5}>
-          <FormControlLabel
-            className={classes.enableControl}
-            control={
-              <Switch id="enabled" checked={checked} onChange={toggleChecked} />
-            }
-            label="Enabled"
-            labelPlacement="start"
-          />
+      {currentItem['calculation'] ? (
+        <Grid className={classes.root} container justify="space-between">
+          <Grid item xs={5}>
+            <FormControlLabel
+              className={classes.enableControl}
+              control={
+                <Switch
+                  id="enabled"
+                  checked={checked}
+                  onChange={toggleChecked}
+                />
+              }
+              label="Enabled"
+              labelPlacement="start"
+            />
+          </Grid>
+
+          <Grid item xs={7}>
+            <FormControl variant="outlined" className={classes.formControl}>
+              <InputLabel htmlFor="calculation">Calculation</InputLabel>
+              <Select
+                native
+                id="calculation"
+                className="selectInput"
+                onChange={handleChange}
+                label="Calculation"
+                value={currentItem.calculation}
+              >
+                <option aria-label="None" value="" />
+                {calcOptions.map((calcOpt, index) => (
+                  <option key={index} value={index}>
+                    {index + ' - ' + calcOpt}
+                  </option>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
         </Grid>
-        <Grid item xs={7}>
-          <FormControl variant="outlined" className={classes.formControl}>
-            <InputLabel htmlFor="calculation">Calculation</InputLabel>
-            <Select
-              native
-              id="calculation"
-              className="selectInput"
-              onChange={handleChange}
-              label="Calculation"
-              value={currentItem.calculation}
-            >
-              <option aria-label="None" value="" />
-              {calcOptions.map((calcOpt, index) => (
-                <option key={index} value={index}>
-                  {index + ' - ' + calcOpt}
-                </option>
-              ))}
-            </Select>
-          </FormControl>
-        </Grid>
-      </Grid>
+      ) : null}
 
       <Grid
         container
@@ -133,29 +134,33 @@ export default function DataViewer({
         justify="center"
         alignItems="center"
       >
-        <Grid item xs={6}>
-          <FormControl variant="outlined" className={classes.formControl}>
-            <TextField
-              id="weight"
-              label="Weight"
-              variant="outlined"
-              defaultValue={currentItem.weight}
-              onChange={handleChange}
-            />
-          </FormControl>
-        </Grid>
+        {currentItem['weight'] ? (
+          <Grid item xs={6}>
+            <FormControl variant="outlined" className={classes.formControl}>
+              <TextField
+                id="weight"
+                label="Weight"
+                variant="outlined"
+                defaultValue={currentItem.weight}
+                onChange={handleChange}
+              />
+            </FormControl>
+          </Grid>
+        ) : null}
 
-        <Grid item xs={6} className={classes.gridItem}>
-          <FormControl variant="outlined" className={classes.formControl}>
-            <TextField
-              id="targetValue"
-              label="Target Value"
-              variant="outlined"
-              defaultValue={currentItem.targetValue}
-              onChange={handleChange}
-            />
-          </FormControl>
-        </Grid>
+        {currentItem['target_value'] ? (
+          <Grid item xs={6} className={classes.gridItem}>
+            <FormControl variant="outlined" className={classes.formControl}>
+              <TextField
+                id="targetValue"
+                label="Target Value"
+                variant="outlined"
+                defaultValue={currentItem.targetValue}
+                onChange={handleChange}
+              />
+            </FormControl>
+          </Grid>
+        ) : null}
       </Grid>
     </>
   )

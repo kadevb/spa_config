@@ -47,6 +47,7 @@ export default function HorizontalStepper({
   activeStep,
   setActiveStep,
   isDone,
+  resetFormState,
 }) {
   const classes = useStyles()
   const steps = getSteps()
@@ -54,7 +55,9 @@ export default function HorizontalStepper({
   const [nextDisabled, setNextDisabled] = useState(true)
 
   useEffect(() => {
-    if (source && activeStep === 0) {
+    if (!source) {
+      setNextDisabled(true)
+    } else if (source && activeStep === 0) {
       setNextDisabled(false)
     } else if (source && !selectedItem && activeStep === 1) {
       setNextDisabled(true)
@@ -84,6 +87,7 @@ export default function HorizontalStepper({
 
   const handleReset = () => {
     setActiveStep(0)
+    resetFormState()
   }
 
   return (

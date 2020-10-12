@@ -52,6 +52,16 @@ export default function MainComponent() {
 
   useEffect(() => {}, [])
 
+  const resetFormState = () => {
+    setSource(null)
+    setRowSelector(null)
+    setRowKey(null)
+    setSelectedItem(null)
+    setCurrentItem(null)
+    setActiveStep(0)
+    setDone(false)
+  }
+
   //handle source selection
   const handleButton = (source) => {
     setSource(source)
@@ -89,9 +99,16 @@ export default function MainComponent() {
     setDone(true)
   }
 
-  const handleSubmit = (currentItem) => {
+  const setFinalizedItem = (currentItem) => {
     setCurrentItem(currentItem)
-    console.log('123' + currentItem)
+
+    const newItem = currentItem
+    const allItems = [...rowSelector]
+    const oldItem = allItems.find(
+      (item) => item[rowKey[0]] === newItem[rowKey[0]]
+    )
+    allItems.splice(allItems.indexOf(oldItem), 1, newItem)
+    setRowSelector(allItems)
   }
 
   return (
@@ -104,6 +121,7 @@ export default function MainComponent() {
           <Fade in={true} timeout={10000}>
             <DropDownSelector
               handleButton={handleButton}
+              source={source}
               options={dataOptions}
               label={'Source'}
               disabled={activeStep >= 1 ? true : false}
@@ -120,7 +138,7 @@ export default function MainComponent() {
           {currentItem && activeStep >= 2 ? (
             <DataViewer
               propItem={currentItem}
-              setFinishedItem={setCurrentItem}
+              setFinalizedItem={setFinalizedItem}
               done={done}
             />
           ) : null}
@@ -133,6 +151,7 @@ export default function MainComponent() {
             activeStep={activeStep}
             setActiveStep={setActiveStep}
             isDone={isDone}
+            resetFormState={resetFormState}
           />
         </Container>
       </Paper>
