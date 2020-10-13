@@ -74,7 +74,7 @@ export default function DataViewer({ propItem, done, setFinalizedItem }) {
 
   return (
     <>
-      {currentItem['description'] ? (
+      {currentItem.hasOwnProperty('description') ? (
         <FormControl variant="outlined" className={classes.formControl}>
           <TextField
             id="description"
@@ -86,9 +86,8 @@ export default function DataViewer({ propItem, done, setFinalizedItem }) {
           ></TextField>
         </FormControl>
       ) : null}
-
-      {currentItem['calculation'] ? (
-        <Grid className={classes.root} container justify="space-between">
+      <Grid className={classes.root} container justify="space-between">
+        {currentItem.hasOwnProperty('enabled') ? (
           <Grid item xs={5}>
             <FormControlLabel
               className={classes.enableControl}
@@ -103,7 +102,8 @@ export default function DataViewer({ propItem, done, setFinalizedItem }) {
               labelPlacement="start"
             />
           </Grid>
-
+        ) : null}
+        {currentItem.hasOwnProperty('calculation') ? (
           <Grid item xs={7}>
             <FormControl variant="outlined" className={classes.formControl}>
               <InputLabel htmlFor="calculation">Calculation</InputLabel>
@@ -115,7 +115,6 @@ export default function DataViewer({ propItem, done, setFinalizedItem }) {
                 label="Calculation"
                 value={currentItem.calculation}
               >
-                <option aria-label="None" value="" />
                 {calcOptions.map((calcOpt, index) => (
                   <option key={index} value={index}>
                     {index + ' - ' + calcOpt}
@@ -124,8 +123,8 @@ export default function DataViewer({ propItem, done, setFinalizedItem }) {
               </Select>
             </FormControl>
           </Grid>
-        </Grid>
-      ) : null}
+        ) : null}
+      </Grid>
 
       <Grid
         container
@@ -134,7 +133,7 @@ export default function DataViewer({ propItem, done, setFinalizedItem }) {
         justify="center"
         alignItems="center"
       >
-        {currentItem['weight'] ? (
+        {currentItem.hasOwnProperty('weight') ? (
           <Grid item xs={6}>
             <FormControl variant="outlined" className={classes.formControl}>
               <TextField
@@ -148,7 +147,7 @@ export default function DataViewer({ propItem, done, setFinalizedItem }) {
           </Grid>
         ) : null}
 
-        {currentItem['target_value'] ? (
+        {currentItem.hasOwnProperty('targetValue') ? (
           <Grid item xs={6} className={classes.gridItem}>
             <FormControl variant="outlined" className={classes.formControl}>
               <TextField

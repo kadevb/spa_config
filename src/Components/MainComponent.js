@@ -24,17 +24,13 @@ const useStyles = makeStyles((theme) => ({
   },
 
   myPaper: {
-    marginTop: 5,
     width: '80%',
     minWidth: 300,
     maxWidth: 800,
     paddingTop: '5vh',
     paddingBottom: '5vh',
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
     minHeight: 300,
+    margin: 'auto',
   },
 }))
 
@@ -93,6 +89,7 @@ export default function MainComponent() {
     // 1st step :
     //currentStep === '1' ? setRowSelector(null)
     setCurrentItem(null)
+    setSelectedItem(null)
   }
 
   const isDone = () => {
