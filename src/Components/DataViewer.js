@@ -7,7 +7,6 @@ import TextField from '@material-ui/core/TextField'
 import Switch from '@material-ui/core/Switch'
 import FormControlLabel from '@material-ui/core/FormControlLabel'
 import Grid from '@material-ui/core/Grid'
-import Modal from '@material-ui/core/Modal'
 import { calcOptions } from '../store'
 
 const useStyles = makeStyles((theme) => ({
@@ -59,7 +58,6 @@ export default function DataViewer({
   const [checked, setChecked] = useState(
     currentItem.enabled === 'true' || currentItem.enabled === 'TRUE'
   )
-  const [finished, setFinished] = useState(done)
 
   useEffect(() => {
     if (currentItem.hasOwnProperty('enabled')) {

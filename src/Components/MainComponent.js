@@ -10,7 +10,6 @@ import Paper from '@material-ui/core/Paper'
 import Container from '@material-ui/core/Container'
 import DataViewer from './DataViewer'
 import Fade from '@material-ui/core/Fade'
-import AlertDialog from './Modal'
 
 const useStyles = makeStyles((theme) => ({
   formControl: {
