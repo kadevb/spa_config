@@ -142,6 +142,7 @@ export default function MainComponent() {
               propItem={currentItem}
               setFinalizedItem={setFinalizedItem}
               done={done}
+              disabled={activeStep >= 3 ? true : false}
             />
           ) : null}
 

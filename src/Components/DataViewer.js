@@ -47,7 +47,12 @@ const useStyles = makeStyles((theme) => ({
   },
 }))
 
-export default function DataViewer({ propItem, done, setFinalizedItem }) {
+export default function DataViewer({
+  propItem,
+  done,
+  setFinalizedItem,
+  disabled,
+}) {
   const classes = useStyles()
 
   const [currentItem, setCurrentItem] = useState(propItem)
@@ -85,6 +90,7 @@ export default function DataViewer({ propItem, done, setFinalizedItem }) {
             multiline
             onChange={handleChange}
             defaultValue={currentItem.description}
+            disabled={disabled}
           ></TextField>
         </FormControl>
       ) : null}
@@ -97,6 +103,7 @@ export default function DataViewer({ propItem, done, setFinalizedItem }) {
             multiline
             onChange={handleChange}
             defaultValue={currentItem.ipAddress}
+            disabled={disabled}
           ></TextField>
         </FormControl>
       ) : null}
@@ -110,6 +117,7 @@ export default function DataViewer({ propItem, done, setFinalizedItem }) {
                   id="enabled"
                   checked={checked}
                   onChange={toggleChecked}
+                  disabled={disabled}
                 />
               }
               label="Enabled"
@@ -128,6 +136,7 @@ export default function DataViewer({ propItem, done, setFinalizedItem }) {
                 onChange={handleChange}
                 label="Calculation"
                 value={currentItem.calculation}
+                disabled={disabled}
               >
                 {calcOptions.map((calcOpt, index) => (
                   <option key={index} value={index}>
@@ -156,6 +165,7 @@ export default function DataViewer({ propItem, done, setFinalizedItem }) {
                 variant="outlined"
                 defaultValue={currentItem.weight}
                 onChange={handleChange}
+                disabled={disabled}
               />
             </FormControl>
           </Grid>
@@ -170,6 +180,7 @@ export default function DataViewer({ propItem, done, setFinalizedItem }) {
                 variant="outlined"
                 defaultValue={currentItem.targetValue}
                 onChange={handleChange}
+                disabled={disabled}
               />
             </FormControl>
           </Grid>

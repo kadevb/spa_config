@@ -145,7 +145,7 @@ export default function HorizontalStepper({
                       disabled={nextDisabled}
                       onClick={handleNext}
                     >
-                      Next{' '}
+                      {'Next'}
                     </Button>
                   ) : (
                     <AlertDialog
