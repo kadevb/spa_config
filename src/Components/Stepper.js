@@ -6,6 +6,7 @@ import StepLabel from '@material-ui/core/StepLabel'
 import Button from '@material-ui/core/Button'
 import Typography from '@material-ui/core/Typography'
 import Grid from '@material-ui/core/Grid'
+import AlertDialog from './Modal'
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -48,11 +49,13 @@ export default function HorizontalStepper({
   setActiveStep,
   isDone,
   resetFormState,
+  handleClickOpen,
 }) {
   const classes = useStyles()
   const steps = getSteps()
 
   const [nextDisabled, setNextDisabled] = useState(true)
+  const [open, setOpen] = useState(false)
 
   useEffect(() => {
     if (!source) {
@@ -135,14 +138,21 @@ export default function HorizontalStepper({
                   </Button>
                 </Grid>
                 <Grid item xs={2} className={classes.gridItem}>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    disabled={nextDisabled}
-                    onClick={handleNext}
-                  >
-                    {activeStep === steps.length - 1 ? 'Finish' : 'Next'}
-                  </Button>
+                  {activeStep !== steps.length - 1 ? (
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      disabled={nextDisabled}
+                      onClick={handleNext}
+                    >
+                      Next{' '}
+                    </Button>
+                  ) : (
+                    <AlertDialog
+                      onClick={handleClickOpen}
+                      handleNext={handleNext}
+                    />
+                  )}
                 </Grid>
               </Grid>
             </div>

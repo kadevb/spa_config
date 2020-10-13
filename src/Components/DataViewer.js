@@ -57,7 +57,9 @@ export default function DataViewer({ propItem, done, setFinalizedItem }) {
   const [finished, setFinished] = useState(done)
 
   useEffect(() => {
-    setCurrentItem({ ...currentItem, enabled: checked })
+    if (currentItem.hasOwnProperty('enabled')) {
+      setCurrentItem({ ...currentItem, enabled: checked })
+    }
     if (done) setFinalizedItem(currentItem)
     console.log(currentItem)
   }, [checked, done])
@@ -83,6 +85,18 @@ export default function DataViewer({ propItem, done, setFinalizedItem }) {
             multiline
             onChange={handleChange}
             defaultValue={currentItem.description}
+          ></TextField>
+        </FormControl>
+      ) : null}
+      {currentItem.hasOwnProperty('ipAddress') ? (
+        <FormControl variant="outlined" className={classes.formControl}>
+          <TextField
+            id="ipAddress"
+            label="IP Address"
+            variant="outlined"
+            multiline
+            onChange={handleChange}
+            defaultValue={currentItem.ipAddress}
           ></TextField>
         </FormControl>
       ) : null}

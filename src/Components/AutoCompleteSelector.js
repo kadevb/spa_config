@@ -8,6 +8,7 @@ export default function AutoCompleteSelector({
   rowKey,
   handleItemSelect,
   disabled,
+  selectedItem,
 }) {
   const handleInputChange = (e, value) => {
     handleItemSelect(value)

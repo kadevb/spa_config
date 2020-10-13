@@ -10,6 +10,7 @@ import Paper from '@material-ui/core/Paper'
 import Container from '@material-ui/core/Container'
 import DataViewer from './DataViewer'
 import Fade from '@material-ui/core/Fade'
+import AlertDialog from './Modal'
 
 const useStyles = makeStyles((theme) => ({
   formControl: {
@@ -45,6 +46,7 @@ export default function MainComponent() {
   const [currentItem, setCurrentItem] = useState(null)
   const [activeStep, setActiveStep] = useState(0)
   const [done, setDone] = useState(false)
+  const [selectedSource, setSelectedSource] = useState('')
 
   useEffect(() => {}, [])
 
@@ -56,6 +58,7 @@ export default function MainComponent() {
     setCurrentItem(null)
     setActiveStep(0)
     setDone(false)
+    setSelectedSource('')
   }
 
   //handle source selection
@@ -118,14 +121,16 @@ export default function MainComponent() {
           <Fade in={true} timeout={10000}>
             <DropDownSelector
               handleButton={handleButton}
-              source={source}
+              selectedSource={selectedSource}
               options={dataOptions}
               label={'Source'}
+              setSelectedSource={setSelectedSource}
               disabled={activeStep >= 1 ? true : false}
             />
           </Fade>
           {rowSelector && activeStep >= 1 ? (
             <AutoCompleteSelector
+              selectedItem={selectedItem}
               rowSelector={rowSelector}
               rowKey={rowKey}
               handleItemSelect={handleItemSelect}
