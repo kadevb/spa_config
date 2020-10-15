@@ -10,6 +10,7 @@
     "create-use-context": "^1.0.1",
     "d3": "^6.2.0",
     "fs-react": "0.0.4",
+    "is-ip": "^3.1.0",
     "node-sass": "^4.14.1",
     "papaparse": "^5.3.0",
     "react": "^16.13.1",

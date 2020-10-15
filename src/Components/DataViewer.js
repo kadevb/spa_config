@@ -58,6 +58,9 @@ export default function DataViewer({
   const [checked, setChecked] = useState(
     currentItem.enabled === 'true' || currentItem.enabled === 'TRUE'
   )
+  const isIp = require('is-ip')
+  const [error, setError] = useState(false)
+  const [helperText, setHelperText] = useState('')
 
   useEffect(() => {
     if (currentItem.hasOwnProperty('enabled')) {
@@ -75,6 +78,17 @@ export default function DataViewer({
     const key = event.target.getAttribute('id')
     currentItem[key] = event.target.value
     setCurrentItem({ ...currentItem })
+  }
+
+  const handleIPCheck = (event) => {
+    if (isIp(event.target.value) === true) {
+      setHelperText('')
+      setError(false)
+      handleChange(event)
+    } else {
+      setError(true)
+      setHelperText('Please enter a valid IP address')
+    }
   }
 
   return (
@@ -95,15 +109,40 @@ export default function DataViewer({
       {currentItem.hasOwnProperty('ipAddress') ? (
         <FormControl variant="outlined" className={classes.formControl}>
           <TextField
+            error={error}
             id="ipAddress"
             label="IP Address"
             variant="outlined"
-            multiline
-            onChange={handleChange}
+            onChange={handleIPCheck}
             defaultValue={currentItem.ipAddress}
             disabled={disabled}
+            helperText={helperText}
           ></TextField>
         </FormControl>
+      ) : null}
+      {currentItem.hasOwnProperty('parentCategoryId') ? (
+        <Grid item>
+          <FormControl variant="outlined" className={classes.formControl}>
+            <InputLabel htmlFor="parentCategoryID">
+              Parent Category ID
+            </InputLabel>
+            <Select
+              native
+              id="parentCategoryID"
+              className="selectInput"
+              onChange={handleChange}
+              label="Parent Category ID"
+              value={currentItem.parentCategoryId}
+              disabled={disabled}
+            >
+              {calcOptions.map((calcOpt, index) => (
+                <option key={index} value={index}>
+                  {index + ' - ' + calcOpt}
+                </option>
+              ))}
+            </Select>
+          </FormControl>
+        </Grid>
       ) : null}
       <Grid className={classes.root} container justify="space-between">
         {currentItem.hasOwnProperty('enabled') ? (

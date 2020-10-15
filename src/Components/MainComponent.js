@@ -9,7 +9,6 @@ import AutoCompleteSelector from './AutoCompleteSelector'
 import Paper from '@material-ui/core/Paper'
 import Container from '@material-ui/core/Container'
 import DataViewer from './DataViewer'
-import Fade from '@material-ui/core/Fade'
 
 const useStyles = makeStyles((theme) => ({
   formControl: {
@@ -117,16 +116,14 @@ export default function MainComponent() {
           <Typography variant="h3" gutterBottom>
             {'SPA'}
           </Typography>
-          <Fade in={true} timeout={10000}>
-            <DropDownSelector
-              handleButton={handleButton}
-              selectedSource={selectedSource}
-              options={dataOptions}
-              label={'Source'}
-              setSelectedSource={setSelectedSource}
-              disabled={activeStep >= 1 ? true : false}
-            />
-          </Fade>
+          <DropDownSelector
+            handleButton={handleButton}
+            selectedSource={selectedSource}
+            options={dataOptions}
+            label={'Source'}
+            setSelectedSource={setSelectedSource}
+            disabled={activeStep >= 1 ? true : false}
+          />
           {rowSelector && activeStep >= 1 ? (
             <AutoCompleteSelector
               selectedItem={selectedItem}
