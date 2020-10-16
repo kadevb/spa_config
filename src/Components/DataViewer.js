@@ -135,7 +135,7 @@ export default function DataViewer({
               value={currentItem.parentCategoryId}
               disabled={disabled}
             >
-              {calcOptions.map((calcOpt, index) => (
+              {calcOptions.map((calcOpt, index = 1) => (
                 <option key={index} value={index}>
                   {index + ' - ' + calcOpt}
                 </option>

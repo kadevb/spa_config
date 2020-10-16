@@ -9,6 +9,8 @@ import AutoCompleteSelector from './AutoCompleteSelector'
 import Paper from '@material-ui/core/Paper'
 import Container from '@material-ui/core/Container'
 import DataViewer from './DataViewer'
+import AddButton from './AddButton'
+import Grid from '@material-ui/core/Grid'
 
 const useStyles = makeStyles((theme) => ({
   formControl: {
@@ -125,13 +127,20 @@ export default function MainComponent() {
             disabled={activeStep >= 1 ? true : false}
           />
           {rowSelector && activeStep >= 1 ? (
-            <AutoCompleteSelector
-              selectedItem={selectedItem}
-              rowSelector={rowSelector}
-              rowKey={rowKey}
-              handleItemSelect={handleItemSelect}
-              disabled={activeStep >= 2 ? true : false}
-            />
+            <Grid container>
+              <Grid item xs={10}>
+                <AutoCompleteSelector
+                  selectedItem={selectedItem}
+                  rowSelector={rowSelector}
+                  rowKey={rowKey}
+                  handleItemSelect={handleItemSelect}
+                  disabled={activeStep >= 2 ? true : false}
+                />
+              </Grid>
+              <Grid container xs={2} justify="center" alignContent="center">
+                <AddButton disabled={activeStep >= 2 ? true : false} />
+              </Grid>
+            </Grid>
           ) : null}
           {currentItem && activeStep >= 2 ? (
             <DataViewer

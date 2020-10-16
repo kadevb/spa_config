@@ -6,6 +6,7 @@
   "description": "https://github.com/mui-org/material-ui/blob/master/docs/src/pages/components/paper/Variants.js",
   "dependencies": {
     "@material-ui/core": "latest",
+    "@material-ui/icons": "^4.9.1",
     "@material-ui/lab": "^4.0.0-alpha.56",
     "create-use-context": "^1.0.1",
     "d3": "^6.2.0",
