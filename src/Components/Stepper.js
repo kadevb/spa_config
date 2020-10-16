@@ -7,6 +7,7 @@ import Button from '@material-ui/core/Button'
 import Typography from '@material-ui/core/Typography'
 import Grid from '@material-ui/core/Grid'
 import AlertDialog from './Modal'
+import Fade from '@material-ui/core/Fade'
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -93,71 +94,73 @@ export default function HorizontalStepper({
   }
 
   return (
-    <div className={classes.root}>
-      <Typography className={classes.instructions}>
-        {getStepContent(activeStep)}
-      </Typography>
-      <Stepper activeStep={activeStep} alternativeLabel>
-        {steps.map((label) => (
-          <Step key={label}>
-            <StepLabel>{label}</StepLabel>
-          </Step>
-        ))}
-      </Stepper>
-      <div>
-        {activeStep === steps.length ? (
-          <Grid container justify="center">
-            <Grid item>
-              <Button
-                onClick={handleReset}
-                color="secondary"
-                variant="contained"
-              >
-                Reset
-              </Button>
-            </Grid>
-          </Grid>
-        ) : (
-          <div>
-            <div>
-              <Grid
-                container
-                className={classes.root}
-                spacing={2}
-                justify="space-evenly"
-                alignItems="center"
-              >
-                <Grid item xs={2} className={classes.gridItem}>
-                  <Button
-                    disabled={activeStep === 0}
-                    onClick={handleBack}
-                    className={classes.backButton}
-                  >
-                    Back
-                  </Button>
-                </Grid>
-                <Grid item xs={2} className={classes.gridItem}>
-                  {activeStep !== steps.length - 1 ? (
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      disabled={nextDisabled}
-                      onClick={handleNext}
-                    >
-                      {'Next'}
-                    </Button>
-                  ) : (
-                    <AlertDialog
-                      onClick={handleClickOpen}
-                      handleNext={handleNext}
-                    />
-                  )}
-                </Grid>
+    <Fade in={true} timeout={1400}>
+      <div className={classes.root}>
+        <Typography className={classes.instructions}>
+          {getStepContent(activeStep)}
+        </Typography>
+        <Stepper activeStep={activeStep} alternativeLabel>
+          {steps.map((label) => (
+            <Step key={label}>
+              <StepLabel>{label}</StepLabel>
+            </Step>
+          ))}
+        </Stepper>
+        <div>
+          {activeStep === steps.length ? (
+            <Grid container justify="center">
+              <Grid item>
+                <Button
+                  onClick={handleReset}
+                  color="secondary"
+                  variant="contained"
+                >
+                  Reset
+                </Button>
               </Grid>
+            </Grid>
+          ) : (
+            <div>
+              <div>
+                <Grid
+                  container
+                  className={classes.root}
+                  spacing={2}
+                  justify="space-evenly"
+                  alignItems="center"
+                >
+                  <Grid item xs={2} className={classes.gridItem}>
+                    <Button
+                      disabled={activeStep === 0}
+                      onClick={handleBack}
+                      className={classes.backButton}
+                    >
+                      Back
+                    </Button>
+                  </Grid>
+                  <Grid item xs={2} className={classes.gridItem}>
+                    {activeStep !== steps.length - 1 ? (
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        disabled={nextDisabled}
+                        onClick={handleNext}
+                      >
+                        {'Next'}
+                      </Button>
+                    ) : (
+                      <AlertDialog
+                        onClick={handleClickOpen}
+                        handleNext={handleNext}
+                      />
+                    )}
+                  </Grid>
+                </Grid>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
-    </div>
+    </Fade>
   )
 }

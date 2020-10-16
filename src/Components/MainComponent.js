@@ -11,6 +11,7 @@ import Container from '@material-ui/core/Container'
 import DataViewer from './DataViewer'
 import AddButton from './AddButton'
 import Grid from '@material-ui/core/Grid'
+import Fade from '@material-ui/core/Fade'
 
 const useStyles = makeStyles((theme) => ({
   formControl: {
@@ -115,9 +116,11 @@ export default function MainComponent() {
     <>
       <Paper elevation={3} className={classes.myPaper}>
         <Container maxWidth="sm">
-          <Typography variant="h3" gutterBottom>
-            {'SPA'}
-          </Typography>
+          <Fade in={true} timeout={1000}>
+            <Typography variant="h3" gutterBottom>
+              {'SPA'}
+            </Typography>
+          </Fade>
           <DropDownSelector
             handleButton={handleButton}
             selectedSource={selectedSource}
@@ -150,7 +153,6 @@ export default function MainComponent() {
               disabled={activeStep >= 3 ? true : false}
             />
           ) : null}
-
           <HorizontalStepper
             source={source}
             nextClicked={stepperNextClicked}

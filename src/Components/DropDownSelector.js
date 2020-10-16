@@ -3,6 +3,7 @@ import { makeStyles } from '@material-ui/core/styles'
 import InputLabel from '@material-ui/core/InputLabel'
 import FormControl from '@material-ui/core/FormControl'
 import Select from '@material-ui/core/Select'
+import Fade from '@material-ui/core/Fade'
 
 const useStyles = makeStyles((theme) => ({
   formControl: {
@@ -33,22 +34,24 @@ export default function SourceSelector({
   }
 
   return (
-    <FormControl variant="outlined" className={classes.formControl}>
-      <InputLabel htmlFor="outlined-source-select"> {label}</InputLabel>
-      <Select
-        native
-        onChange={handleChange}
-        label={label}
-        disabled={disabled}
-        value={selectedSource}
-      >
-        <option aria-label="None" value="" />
-        {options.map((opt, index) => (
-          <option key={index} value={opt.source}>
-            {opt.name}
-          </option>
-        ))}
-      </Select>
-    </FormControl>
+    <Fade in={true} timeout={1200}>
+      <FormControl variant="outlined" className={classes.formControl}>
+        <InputLabel htmlFor="outlined-source-select"> {label}</InputLabel>
+        <Select
+          native
+          onChange={handleChange}
+          label={label}
+          disabled={disabled}
+          value={selectedSource}
+        >
+          <option aria-label="None" value="" />
+          {options.map((opt, index) => (
+            <option key={index} value={opt.source}>
+              {opt.name}
+            </option>
+          ))}
+        </Select>
+      </FormControl>
+    </Fade>
   )
 }
