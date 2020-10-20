@@ -94,7 +94,7 @@ export default function HorizontalStepper({
   }
 
   return (
-    <Fade in={true} timeout={1400}>
+    <Fade in={true} timeout={600}>
       <div className={classes.root}>
         <Typography className={classes.instructions}>
           {getStepContent(activeStep)}

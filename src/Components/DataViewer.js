@@ -8,6 +8,7 @@ import Switch from '@material-ui/core/Switch'
 import FormControlLabel from '@material-ui/core/FormControlLabel'
 import Grid from '@material-ui/core/Grid'
 import { calcOptions } from '../store'
+import Fade from '@material-ui/core/Fade'
 
 const useStyles = makeStyles((theme) => ({
   formControl: {
@@ -94,88 +95,53 @@ export default function DataViewer({
   return (
     <>
       {currentItem.hasOwnProperty('description') ? (
-        <FormControl variant="outlined" className={classes.formControl}>
-          <TextField
-            id="description"
-            label="Description"
-            variant="outlined"
-            multiline
-            onChange={handleChange}
-            defaultValue={currentItem.description}
-            disabled={disabled}
-          ></TextField>
-        </FormControl>
+        <Fade in={true} timeout={600}>
+          <FormControl variant="outlined" className={classes.formControl}>
+            <TextField
+              id="description"
+              label="Description"
+              variant="outlined"
+              multiline
+              onChange={handleChange}
+              defaultValue={currentItem.description}
+              disabled={disabled}
+            ></TextField>
+          </FormControl>
+        </Fade>
       ) : null}
       {currentItem.hasOwnProperty('ipAddress') ? (
-        <FormControl variant="outlined" className={classes.formControl}>
-          <TextField
-            error={error}
-            id="ipAddress"
-            label="IP Address"
-            variant="outlined"
-            onChange={handleIPCheck}
-            defaultValue={currentItem.ipAddress}
-            disabled={disabled}
-            helperText={helperText}
-          ></TextField>
-        </FormControl>
+        <Fade in={true} timeout={600}>
+          <FormControl variant="outlined" className={classes.formControl}>
+            <TextField
+              error={error}
+              id="ipAddress"
+              label="IP Address"
+              variant="outlined"
+              onChange={handleIPCheck}
+              defaultValue={currentItem.ipAddress}
+              disabled={disabled}
+              helperText={helperText}
+            ></TextField>
+          </FormControl>
+        </Fade>
       ) : null}
       {currentItem.hasOwnProperty('parentCategoryId') ? (
-        <Grid item>
-          <FormControl variant="outlined" className={classes.formControl}>
-            <InputLabel htmlFor="parentCategoryID">
-              Parent Category ID
-            </InputLabel>
-            <Select
-              native
-              id="parentCategoryID"
-              className="selectInput"
-              onChange={handleChange}
-              label="Parent Category ID"
-              value={currentItem.parentCategoryId}
-              disabled={disabled}
-            >
-              {calcOptions.map((calcOpt, index = 1) => (
-                <option key={index} value={index}>
-                  {index + ' - ' + calcOpt}
-                </option>
-              ))}
-            </Select>
-          </FormControl>
-        </Grid>
-      ) : null}
-      <Grid className={classes.root} container justify="space-between">
-        {currentItem.hasOwnProperty('enabled') ? (
-          <Grid item xs={5}>
-            <FormControlLabel
-              className={classes.enableControl}
-              control={
-                <Switch
-                  id="enabled"
-                  checked={checked}
-                  onChange={toggleChecked}
-                  disabled={disabled}
-                />
-              }
-              label="Enabled"
-              labelPlacement="start"
-            />
-          </Grid>
-        ) : null}
-        {currentItem.hasOwnProperty('calculation') ? (
-          <Grid item xs={7}>
+        <Fade in={true} timeout={800}>
+          <Grid item>
             <FormControl variant="outlined" className={classes.formControl}>
-              <InputLabel htmlFor="calculation">Calculation</InputLabel>
+              <InputLabel htmlFor="parentCategoryID">
+                Parent Category ID
+              </InputLabel>
               <Select
                 native
-                id="calculation"
+                id="parentCategoryID"
                 className="selectInput"
                 onChange={handleChange}
-                label="Calculation"
-                value={currentItem.calculation}
+                label="Parent Category ID"
+                value={currentItem.parentCategoryId}
                 disabled={disabled}
               >
-                {calcOptions.map((calcOpt, index) => (
+                {calcOptions.map((calcOpt, index = 1) => (
                   <option key={index} value={index}>
                     {index + ' - ' + calcOpt}
                   </option>
@@ -183,6 +149,51 @@ export default function DataViewer({
               </Select>
             </FormControl>
           </Grid>
+        </Fade>
+      ) : null}
+      <Grid className={classes.root} container justify="space-between">
+        {currentItem.hasOwnProperty('enabled') ? (
+          <Fade in={true} timeout={1000}>
+            <Grid item xs={5}>
+              <FormControlLabel
+                className={classes.enableControl}
+                control={
+                  <Switch
+                    id="enabled"
+                    checked={checked}
+                    onChange={toggleChecked}
+                    disabled={disabled}
+                  />
+                }
+                label="Enabled"
+                labelPlacement="start"
+              />
+            </Grid>
+          </Fade>
+        ) : null}
+        {currentItem.hasOwnProperty('calculation') ? (
+          <Fade in={true} timeout={1200}>
+            <Grid item xs={7}>
+              <FormControl variant="outlined" className={classes.formControl}>
+                <InputLabel htmlFor="calculation">Calculation</InputLabel>
+                <Select
+                  native
+                  id="calculation"
+                  className="selectInput"
+                  onChange={handleChange}
+                  label="Calculation"
+                  value={currentItem.calculation}
+                  disabled={disabled}
+                >
+                  {calcOptions.map((calcOpt, index) => (
+                    <option key={index} value={index}>
+                      {index + ' - ' + calcOpt}
+                    </option>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+          </Fade>
         ) : null}
       </Grid>
 
@@ -194,33 +205,37 @@ export default function DataViewer({
         alignItems="center"
       >
         {currentItem.hasOwnProperty('weight') ? (
-          <Grid item xs={6}>
-            <FormControl variant="outlined" className={classes.formControl}>
-              <TextField
-                id="weight"
-                label="Weight"
-                variant="outlined"
-                defaultValue={currentItem.weight}
-                onChange={handleChange}
-                disabled={disabled}
-              />
-            </FormControl>
-          </Grid>
+          <Fade in={true} timeout={1400}>
+            <Grid item xs={6}>
+              <FormControl variant="outlined" className={classes.formControl}>
+                <TextField
+                  id="weight"
+                  label="Weight"
+                  variant="outlined"
+                  defaultValue={currentItem.weight}
+                  onChange={handleChange}
+                  disabled={disabled}
+                />
+              </FormControl>
+            </Grid>
+          </Fade>
         ) : null}
 
         {currentItem.hasOwnProperty('targetValue') ? (
-          <Grid item xs={6} className={classes.gridItem}>
-            <FormControl variant="outlined" className={classes.formControl}>
-              <TextField
-                id="targetValue"
-                label="Target Value"
-                variant="outlined"
-                defaultValue={currentItem.targetValue}
-                onChange={handleChange}
-                disabled={disabled}
-              />
-            </FormControl>
-          </Grid>
+          <Fade in={true} timeout={1600}>
+            <Grid item xs={6} className={classes.gridItem}>
+              <FormControl variant="outlined" className={classes.formControl}>
+                <TextField
+                  id="targetValue"
+                  label="Target Value"
+                  variant="outlined"
+                  defaultValue={currentItem.targetValue}
+                  onChange={handleChange}
+                  disabled={disabled}
+                />
+              </FormControl>
+            </Grid>
+          </Fade>
         ) : null}
       </Grid>
     </>

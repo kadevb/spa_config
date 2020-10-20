@@ -116,7 +116,7 @@ export default function MainComponent() {
     <>
       <Paper elevation={3} className={classes.myPaper}>
         <Container maxWidth="sm">
-          <Fade in={true} timeout={1000}>
+          <Fade in={true} timeout={600}>
             <Typography variant="h3" gutterBottom>
               {'SPA'}
             </Typography>

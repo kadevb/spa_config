@@ -34,7 +34,7 @@ export default function SourceSelector({
   }
 
   return (
-    <Fade in={true} timeout={1200}>
+    <Fade in={true} timeout={600}>
       <FormControl variant="outlined" className={classes.formControl}>
         <InputLabel htmlFor="outlined-source-select"> {label}</InputLabel>
         <Select

@@ -18,7 +18,7 @@ export default function AutoCompleteSelector({
   const label = 'Chose item to edit'
 
   return (
-    <Fade in={true} timeout={1200}>
+    <Fade in={true} timeout={600}>
       <Autocomplete
         id="rowSelector"
         disabled={disabled}
