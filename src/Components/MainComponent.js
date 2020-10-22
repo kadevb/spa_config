@@ -33,6 +33,8 @@ const useStyles = makeStyles((theme) => ({
     paddingBottom: '5vh',
     minHeight: 300,
     margin: 'auto',
+    height: 'auto',
+    transition: 'height 2s ease-in 2s',
   },
 }))
 
