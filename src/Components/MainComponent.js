@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useCallback, useContext } from 'react'
 import { makeStyles } from '@material-ui/core/styles'
 import Typography from '@material-ui/core/Typography'
 import HorizontalStepper from './Stepper'
@@ -12,6 +12,7 @@ import DataViewer from './DataViewer'
 import AddButton from './AddButton'
 import Grid from '@material-ui/core/Grid'
 import Fade from '@material-ui/core/Fade'
+import { SharedFileFromContext } from './SharedFileWithContext'
 
 const useStyles = makeStyles((theme) => ({
   formControl: {
@@ -50,8 +51,6 @@ export default function MainComponent() {
   const [activeStep, setActiveStep] = useState(0)
   const [done, setDone] = useState(false)
   const [selectedSource, setSelectedSource] = useState('')
-
-  useEffect(() => {}, [])
 
   const resetFormState = () => {
     setSource(null)
@@ -142,8 +141,10 @@ export default function MainComponent() {
                   disabled={activeStep >= 2 ? true : false}
                 />
               </Grid>
-              <Grid container xs={2} justify="center" alignContent="center">
-                <AddButton disabled={activeStep >= 2 ? true : false} />
+              <Grid item xs={2}>
+                <Grid container justify="center" alignContent="center">
+                  <AddButton disabled={activeStep >= 2 ? true : false} />
+                </Grid>
               </Grid>
             </Grid>
           ) : null}

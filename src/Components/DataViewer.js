@@ -62,6 +62,8 @@ export default function DataViewer({
   const isIp = require('is-ip')
   const [error, setError] = useState(false)
   const [helperText, setHelperText] = useState('')
+  const [targetHelperText, setTargetHelperText] = useState('')
+  const [targetError, setTargetError] = useState(false)
 
   useEffect(() => {
     if (currentItem.hasOwnProperty('enabled')) {
@@ -90,6 +92,33 @@ export default function DataViewer({
       setError(true)
       setHelperText('Please enter a valid IP address')
     }
+  }
+
+  const handleTargetChange = (event) => {
+    const tValue = Number(event.target.value).toFixed(2)
+
+    const countDecimal = () => {
+      if (event.target.value % 1 !== 0) {
+        return event.target.value.split('.')[1].length
+      }
+    }
+    if (tValue <= 0) {
+      setTargetHelperText('Target Value must be greater than 0')
+      setTargetError(true)
+    } else if (tValue > 1) {
+      setTargetHelperText('Target Value must be less than 1')
+      setTargetError(true)
+    } else if (isNaN(tValue)) {
+      setTargetHelperText('Value must be a number with 2 decimal signs')
+      setTargetError(true)
+    } else if (countDecimal(event.target.value) > 2) {
+      setTargetHelperText('Value must be a number with 2 decimal signs')
+      setTargetError(true)
+    } else {
+      setTargetError(false)
+      setTargetHelperText('')
+    }
+    return tValue
   }
 
   return (
@@ -230,8 +259,10 @@ export default function DataViewer({
                   label="Target Value"
                   variant="outlined"
                   defaultValue={currentItem.targetValue}
-                  onChange={handleChange}
+                  onChange={handleTargetChange}
                   disabled={disabled}
+                  helperText={targetHelperText}
+                  error={targetError}
                 />
               </FormControl>
             </Grid>

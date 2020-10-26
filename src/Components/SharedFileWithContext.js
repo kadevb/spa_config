@@ -1,15 +1,13 @@
-import React, { useState, createContext} from 'react';
+import React, { useState, createContext } from 'react'
 
-export const SharedFileWithContext= createContext();
+export const SharedFileWithContext = createContext()
 
-const FileProvider = (props) => {
-    const [recivedFile, setRecieving] = useState();
-    
-    return (
-        <SharedFileWithContext.Provider value={{recivedFile, setRecieving}}>
-            {props.children}
-        </SharedFileWithContext.Provider>
-    )
-} 
+export const FileProvider = (props) => {
+  const [dataCsv, setDataCsv] = useState([])
 
-export default FileProvider;
+  return (
+    <SharedFileWithContext.Provider value={{ dataCsv, setDataCsv }}>
+      {props.children}
+    </SharedFileWithContext.Provider>
+  )
+}
