@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useContext } from 'react'
 import { makeStyles } from '@material-ui/core/styles'
 import InputLabel from '@material-ui/core/InputLabel'
 import FormControl from '@material-ui/core/FormControl'
@@ -9,6 +9,7 @@ import FormControlLabel from '@material-ui/core/FormControlLabel'
 import Grid from '@material-ui/core/Grid'
 import { calcOptions } from '../store'
 import Fade from '@material-ui/core/Fade'
+import sPAContext from './SharedFileWithContext'
 
 const useStyles = makeStyles((theme) => ({
   formControl: {
@@ -66,6 +67,7 @@ export default function DataViewer({
   const [targetError, setTargetError] = useState(false)
 
   useEffect(() => {
+    console.log(done)
     if (currentItem.hasOwnProperty('enabled')) {
       setCurrentItem({ ...currentItem, enabled: checked })
     }

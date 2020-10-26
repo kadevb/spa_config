@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useContext } from 'react'
 import { makeStyles } from '@material-ui/core/styles'
 import Stepper from '@material-ui/core/Stepper'
 import Step from '@material-ui/core/Step'
@@ -8,6 +8,7 @@ import Typography from '@material-ui/core/Typography'
 import Grid from '@material-ui/core/Grid'
 import AlertDialog from './Modal'
 import Fade from '@material-ui/core/Fade'
+import sPAContext from './SharedFileWithContext'
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -48,7 +49,6 @@ export default function HorizontalStepper({
   stepperBackClicked,
   activeStep,
   setActiveStep,
-  isDone,
   resetFormState,
   handleClickOpen,
 }) {
@@ -56,6 +56,7 @@ export default function HorizontalStepper({
   const steps = getSteps()
 
   const [nextDisabled, setNextDisabled] = useState(true)
+  const { setDone } = useContext(sPAContext)
 
   useEffect(() => {
     if (!source) {
@@ -75,9 +76,9 @@ export default function HorizontalStepper({
       //step 2, load data viewer for row
       nextClicked(selectedItem)
     } else if (activeStep === 3) {
-      isDone()
+      setDone(true)
     }
-  }, [activeStep, nextClicked, selectedItem, source, nextDisabled, isDone])
+  }, [activeStep, nextClicked, selectedItem, source, nextDisabled])
 
   const handleNext = () => {
     setActiveStep((prevActiveStep) => prevActiveStep + 1)

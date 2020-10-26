@@ -1,9 +1,10 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import { makeStyles } from '@material-ui/core/styles'
 import InputLabel from '@material-ui/core/InputLabel'
 import FormControl from '@material-ui/core/FormControl'
 import Select from '@material-ui/core/Select'
 import Fade from '@material-ui/core/Fade'
+import sPAContext from './SharedFileWithContext'
 
 const useStyles = makeStyles((theme) => ({
   formControl: {
@@ -19,7 +20,6 @@ const useStyles = makeStyles((theme) => ({
 }))
 
 export default function SourceSelector({
-  handleButton,
   options,
   label,
   disabled,
@@ -27,10 +27,10 @@ export default function SourceSelector({
   setSelectedSource,
 }) {
   const classes = useStyles()
-
+  const { setSource } = useContext(sPAContext)
   const handleChange = (e) => {
     setSelectedSource(e.target.value)
-    handleButton(e.target.value)
+    setSource(e.target.value)
   }
 
   return (

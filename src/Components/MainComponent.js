@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useContext } from 'react'
+import React, { useState, useCallback, useContext, useMemo } from 'react'
 import { makeStyles } from '@material-ui/core/styles'
 import Typography from '@material-ui/core/Typography'
 import HorizontalStepper from './Stepper'
@@ -12,7 +12,7 @@ import DataViewer from './DataViewer'
 import AddButton from './AddButton'
 import Grid from '@material-ui/core/Grid'
 import Fade from '@material-ui/core/Fade'
-import { SharedFileFromContext } from './SharedFileWithContext'
+import sPAContext from './SharedFileWithContext'
 
 const useStyles = makeStyles((theme) => ({
   formControl: {
@@ -63,14 +63,14 @@ export default function MainComponent() {
     setSelectedSource('')
   }
 
-  //handle source selection
-  const handleButton = (source) => {
-    setSource(source)
-  }
-
-  const handleItemSelect = (selectedItem) => {
-    setSelectedItem(selectedItem)
-  }
+  const value = useMemo(
+    () => ({
+      setSource,
+      setSelectedItem,
+      setDone,
+    }),
+    []
+  )
 
   //handle stepper
   const stepperNextClicked = useCallback((selectedData) => {
@@ -97,10 +97,6 @@ export default function MainComponent() {
     setSelectedItem(null)
   }
 
-  const isDone = () => {
-    setDone(true)
-  }
-
   const setFinalizedItem = (currentItem) => {
     setCurrentItem(currentItem)
 
@@ -114,7 +110,7 @@ export default function MainComponent() {
   }
 
   return (
-    <>
+    <sPAContext.Provider value={value}>
       <Paper elevation={3} className={classes.myPaper}>
         <Container maxWidth="sm">
           <Fade in={true} timeout={600}>
@@ -123,7 +119,6 @@ export default function MainComponent() {
             </Typography>
           </Fade>
           <DropDownSelector
-            handleButton={handleButton}
             selectedSource={selectedSource}
             options={dataOptions}
             label={'Source'}
@@ -137,7 +132,6 @@ export default function MainComponent() {
                   selectedItem={selectedItem}
                   rowSelector={rowSelector}
                   rowKey={rowKey}
-                  handleItemSelect={handleItemSelect}
                   disabled={activeStep >= 2 ? true : false}
                 />
               </Grid>
@@ -163,11 +157,10 @@ export default function MainComponent() {
             stepperBackClicked={stepperBackClicked}
             activeStep={activeStep}
             setActiveStep={setActiveStep}
-            isDone={isDone}
             resetFormState={resetFormState}
           />
         </Container>
       </Paper>
-    </>
+    </sPAContext.Provider>
   )
 }

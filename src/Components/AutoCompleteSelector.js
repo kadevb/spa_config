@@ -1,18 +1,19 @@
 /* eslint-disable no-use-before-define */
-import React from 'react'
+import React, { useContext } from 'react'
 import TextField from '@material-ui/core/TextField'
 import Autocomplete from '@material-ui/lab/Autocomplete'
 import Fade from '@material-ui/core/Fade'
+import sPAContext from './SharedFileWithContext'
 
 export default function AutoCompleteSelector({
   rowSelector,
   rowKey,
-  handleItemSelect,
   disabled,
-  selectedItem,
 }) {
+  const { setSelectedItem } = useContext(sPAContext)
+
   const handleInputChange = (e, value) => {
-    handleItemSelect(value)
+    setSelectedItem(value)
   }
 
   const label = 'Chose item to edit'
