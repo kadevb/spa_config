@@ -117,6 +117,7 @@ export default function DataViewer({
     } else {
       setTargetError(false)
       setTargetHelperText('')
+      handleChange(event)
     }
     return tValue
   }
