@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useContext, useMemo } from 'react'
+import React, { useState, useCallback, useMemo } from 'react'
 import { makeStyles } from '@material-ui/core/styles'
 import Typography from '@material-ui/core/Typography'
 import HorizontalStepper from './Stepper'
@@ -51,6 +51,7 @@ export default function MainComponent() {
   const [activeStep, setActiveStep] = useState(0)
   const [done, setDone] = useState(false)
   const [selectedSource, setSelectedSource] = useState('')
+  const [sameIDArray, setSameIDArray] = useState([])
 
   const resetFormState = () => {
     setSource(null)
@@ -97,6 +98,42 @@ export default function MainComponent() {
     setSelectedItem(null)
   }
 
+  const handleWeightEdit = (value) => {
+    // name of ID column in csv file
+    const idName = Object.keys(currentItem)[0]
+
+    // value of ID  in csv file
+    const idValue = Object.values(currentItem)[0]
+
+    // current item string ID without last number
+    const weightFilterSplit = Object.values(currentItem)[0].split(',')
+    weightFilterSplit.pop()
+    const weightFilter = weightFilterSplit.join()
+    console.log(weightFilter)
+
+    // array of all elements in csv which have the same starting ID symbols
+    const sameParentItems = rowSelector.filter((row) =>
+      row[idName].startsWith(weightFilter)
+    )
+    console.log(sameParentItems)
+
+    // making the calculations
+    const modWeight = (1 - value) / (sameParentItems.length - 1)
+    console.log(modWeight.toFixed(3))
+
+    // array with the other elements which have the same starting ID symbols
+    const newarr = sameParentItems.filter((item) => item[idName] !== idValue)
+
+    // modifying the above array
+    newarr.forEach((item) => (item.weight = modWeight.toFixed(3)))
+    console.log(newarr)
+    setSameIDArray(newarr)
+  }
+
+  const handleCheckChange = () => {
+    console.log('CHECKED')
+  }
+
   const setFinalizedItem = (currentItem) => {
     setCurrentItem(currentItem)
 
@@ -106,7 +143,11 @@ export default function MainComponent() {
       (item) => item[rowKey[0]] === newItem[rowKey[0]]
     )
     allItems.splice(allItems.indexOf(oldItem), 1, newItem)
+    allItems.map(
+      (obj) => sameIDArray.find((o) => o.idName === obj.idName) || obj
+    )
     setRowSelector(allItems)
+    console.log(allItems)
   }
 
   return (
@@ -144,6 +185,8 @@ export default function MainComponent() {
           ) : null}
           {currentItem && activeStep >= 2 ? (
             <DataViewer
+              handleCheckChange={handleCheckChange}
+              handleWeightEdit={handleWeightEdit}
               propItem={currentItem}
               setFinalizedItem={setFinalizedItem}
               done={done}

@@ -78,7 +78,7 @@ export default function HorizontalStepper({
     } else if (activeStep === 3) {
       setDone(true)
     }
-  }, [activeStep, nextClicked, selectedItem, source, nextDisabled])
+  }, [activeStep, nextClicked, selectedItem, source, nextDisabled, setDone])
 
   const handleNext = () => {
     setActiveStep((prevActiveStep) => prevActiveStep + 1)

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from 'react'
+import React, { useEffect, useState } from 'react'
 import { makeStyles } from '@material-ui/core/styles'
 import InputLabel from '@material-ui/core/InputLabel'
 import FormControl from '@material-ui/core/FormControl'
@@ -9,7 +9,9 @@ import FormControlLabel from '@material-ui/core/FormControlLabel'
 import Grid from '@material-ui/core/Grid'
 import { calcOptions } from '../store'
 import Fade from '@material-ui/core/Fade'
-import sPAContext from './SharedFileWithContext'
+import { csv } from 'd3'
+import Tooltip from '@material-ui/core/Tooltip'
+import { withStyles } from '@material-ui/core/styles'
 
 const useStyles = makeStyles((theme) => ({
   formControl: {
@@ -53,30 +55,52 @@ export default function DataViewer({
   done,
   setFinalizedItem,
   disabled,
+  handleWeightEdit,
+  handleCheckChange,
 }) {
   const classes = useStyles()
+
+  const LightTooltip = withStyles((theme) => ({
+    tooltip: {
+      backgroundColor: '#f50057',
+      color: 'white',
+      boxShadow: theme.shadows[1],
+      fontSize: 12,
+    },
+  }))(Tooltip)
 
   const [currentItem, setCurrentItem] = useState(propItem)
   const [checked, setChecked] = useState(
     currentItem.enabled === 'true' || currentItem.enabled === 'TRUE'
+      ? true
+      : false
   )
   const isIp = require('is-ip')
   const [error, setError] = useState(false)
   const [helperText, setHelperText] = useState('')
-  const [targetHelperText, setTargetHelperText] = useState('')
+  const [targetHelperText, setTargetHelperText] = useState(' ')
   const [targetError, setTargetError] = useState(false)
+  const [parentData, setParentData] = useState([])
+  const [weightError, setWeightError] = useState(false)
+  const [weightHelperText, setWeightHelperText] = useState(' ')
 
   useEffect(() => {
-    console.log(done)
     if (currentItem.hasOwnProperty('enabled')) {
       setCurrentItem({ ...currentItem, enabled: checked })
     }
     if (done) setFinalizedItem(currentItem)
     console.log(currentItem)
+
+    if (currentItem.hasOwnProperty('parentCategoryId')) {
+      csv('./lookups/spa_mainCategories.csv').then((d) => {
+        setParentData(d)
+      })
+    }
   }, [checked, done])
 
   const toggleChecked = () => {
     setChecked((prev) => !prev)
+    handleCheckChange()
   }
 
   const handleChange = (event) => {
@@ -96,14 +120,15 @@ export default function DataViewer({
     }
   }
 
+  const countDecimal = (someValue) => {
+    if (someValue % 1 !== 0) {
+      return someValue.split('.')[1].length
+    }
+  }
+
   const handleTargetChange = (event) => {
     const tValue = Number(event.target.value).toFixed(2)
 
-    const countDecimal = () => {
-      if (event.target.value % 1 !== 0) {
-        return event.target.value.split('.')[1].length
-      }
-    }
     if (tValue <= 0) {
       setTargetHelperText('Target Value must be greater than 0')
       setTargetError(true)
@@ -111,17 +136,40 @@ export default function DataViewer({
       setTargetHelperText('Target Value must be less than 1')
       setTargetError(true)
     } else if (isNaN(tValue)) {
-      setTargetHelperText('Value must be a number with 2 decimal signs')
+      setTargetHelperText('Value must be a number with 2 decimals')
       setTargetError(true)
     } else if (countDecimal(event.target.value) > 2) {
-      setTargetHelperText('Value must be a number with 2 decimal signs')
+      setTargetHelperText('Value must be a number with 2 decimals')
       setTargetError(true)
     } else {
       setTargetError(false)
-      setTargetHelperText('')
+      setTargetHelperText(' ')
       handleChange(event)
     }
     return tValue
+  }
+
+  const handleWeightChange = (event) => {
+    const weightN = Number(event.target.value).toFixed(3)
+
+    if (weightN <= 0) {
+      setWeightError(true)
+      setWeightHelperText('Weight must be greater than 0')
+    } else if (weightN > 1) {
+      setWeightError(true)
+      setWeightHelperText('Weight must be less than 1')
+    } else if (isNaN(weightN)) {
+      setWeightError(true)
+      setWeightHelperText('Weight must be a number with 3 decimals')
+    } else if (countDecimal(event.target.value) > 3) {
+      setWeightError(true)
+      setWeightHelperText('Weight must be a number with 3 decimals')
+    } else {
+      setWeightError(true)
+      setWeightHelperText('Changing Weight will affect other items!')
+      handleChange(event)
+      handleWeightEdit(event.target.value)
+    }
   }
 
   return (
@@ -173,9 +221,9 @@ export default function DataViewer({
                 value={currentItem.parentCategoryId}
                 disabled={disabled}
               >
-                {calcOptions.map((calcOpt, index = 1) => (
-                  <option key={index} value={index}>
-                    {index + ' - ' + calcOpt}
+                {parentData.map((parent, index) => (
+                  <option key={index} value={index + 1}>
+                    {parent.name}
                   </option>
                 ))}
               </Select>
@@ -239,16 +287,26 @@ export default function DataViewer({
         {currentItem.hasOwnProperty('weight') ? (
           <Fade in={true} timeout={1400}>
             <Grid item xs={6}>
-              <FormControl variant="outlined" className={classes.formControl}>
-                <TextField
-                  id="weight"
-                  label="Weight"
-                  variant="outlined"
-                  defaultValue={currentItem.weight}
-                  onChange={handleChange}
-                  disabled={disabled}
-                />
-              </FormControl>
+              <LightTooltip
+                arrow
+                title="Changing Weight may cause issues."
+                aria-label="weight"
+                placement="top"
+                color="secondary"
+              >
+                <FormControl variant="outlined" className={classes.formControl}>
+                  <TextField
+                    id="weight"
+                    label="Weight"
+                    variant="outlined"
+                    defaultValue={currentItem.weight}
+                    onChange={handleWeightChange}
+                    helperText={weightHelperText}
+                    error={weightError}
+                    disabled={disabled}
+                  />
+                </FormControl>
+              </LightTooltip>
             </Grid>
           </Fade>
         ) : null}
