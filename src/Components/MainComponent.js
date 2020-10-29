@@ -109,29 +109,53 @@ export default function MainComponent() {
     const weightFilterSplit = Object.values(currentItem)[0].split(',')
     weightFilterSplit.pop()
     const weightFilter = weightFilterSplit.join()
-    console.log(weightFilter)
 
     // array of all elements in csv which have the same starting ID symbols
     const sameParentItems = rowSelector.filter((row) =>
       row[idName].startsWith(weightFilter)
     )
-    console.log(sameParentItems)
 
     // making the calculations
-    const modWeight = (1 - value) / (sameParentItems.length - 1)
-    console.log(modWeight.toFixed(3))
+    if (sameParentItems.length !== 1) {
+      const modWeight = (1 - value) / (sameParentItems.length - 1)
 
-    // array with the other elements which have the same starting ID symbols
-    const newarr = sameParentItems.filter((item) => item[idName] !== idValue)
+      // array with the other elements which have the same starting ID symbols
+      const newarr = sameParentItems.filter((item) => item[idName] !== idValue)
 
-    // modifying the above array
-    newarr.forEach((item) => (item.weight = modWeight.toFixed(3)))
-    console.log(newarr)
-    setSameIDArray(newarr)
+      // modifying the above array
+      newarr.forEach((item) => (item.weight = modWeight.toFixed(3)))
+      setSameIDArray(newarr)
+    }
   }
 
-  const handleCheckChange = () => {
-    console.log('CHECKED')
+  const handleEnabledEdit = () => {
+    // name of ID column in csv file
+    const idName = Object.keys(currentItem)[0]
+
+    // value of ID  in csv file
+    const idValue = Object.values(currentItem)[0]
+
+    // current item string ID without last number
+    const weightFilterSplit = Object.values(currentItem)[0].split(',')
+    weightFilterSplit.pop()
+    const weightFilter = weightFilterSplit.join()
+
+    // array of all elements in csv which have the same starting ID symbols
+    const sameParentItems = rowSelector.filter((row) =>
+      row[idName].startsWith(weightFilter)
+    )
+
+    // making the calculations
+    if (sameParentItems.length !== 1) {
+      const modWeight = 1 / (sameParentItems.length - 1)
+
+      // array with the other elements which have the same starting ID symbols
+      const newarr = sameParentItems.filter((item) => item[idName] !== idValue)
+
+      // modifying the above array
+      newarr.forEach((item) => (item.weight = modWeight.toFixed(3)))
+      setSameIDArray(newarr)
+    }
   }
 
   const setFinalizedItem = (currentItem) => {
@@ -139,10 +163,30 @@ export default function MainComponent() {
 
     const newItem = currentItem
     const allItems = [...rowSelector]
+
     const oldItem = allItems.find(
       (item) => item[rowKey[0]] === newItem[rowKey[0]]
     )
+
+    if (oldItem.enabled.toString() !== newItem.enabled.toString()) {
+      console.log('razl enabl')
+      // handle weight edit for items with same id excluding current item
+      handleEnabledEdit(currentItem)
+      console.log(oldItem, newItem)
+    } else if (Number(oldItem.weight) !== Number(newItem.weight)) {
+      console.log('razl weight')
+      // handle weight edit for items with same id including current item
+
+      handleWeightEdit(newItem.weight)
+      console.log(oldItem, newItem)
+    } else {
+      console.log('edn')
+
+      console.log(oldItem, newItem)
+    }
+
     allItems.splice(allItems.indexOf(oldItem), 1, newItem)
+
     allItems.map(
       (obj) => sameIDArray.find((o) => o.idName === obj.idName) || obj
     )
@@ -185,8 +229,6 @@ export default function MainComponent() {
           ) : null}
           {currentItem && activeStep >= 2 ? (
             <DataViewer
-              handleCheckChange={handleCheckChange}
-              handleWeightEdit={handleWeightEdit}
               propItem={currentItem}
               setFinalizedItem={setFinalizedItem}
               done={done}

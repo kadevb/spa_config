@@ -55,8 +55,6 @@ export default function DataViewer({
   done,
   setFinalizedItem,
   disabled,
-  handleWeightEdit,
-  handleCheckChange,
 }) {
   const classes = useStyles()
 
@@ -76,8 +74,8 @@ export default function DataViewer({
       : false
   )
   const isIp = require('is-ip')
-  const [error, setError] = useState(false)
-  const [helperText, setHelperText] = useState('')
+  const [ipError, setIpError] = useState(false)
+  const [ipHelperText, setIpHelperText] = useState(' ')
   const [targetHelperText, setTargetHelperText] = useState(' ')
   const [targetError, setTargetError] = useState(false)
   const [parentData, setParentData] = useState([])
@@ -89,7 +87,6 @@ export default function DataViewer({
       setCurrentItem({ ...currentItem, enabled: checked })
     }
     if (done) setFinalizedItem(currentItem)
-    console.log(currentItem)
 
     if (currentItem.hasOwnProperty('parentCategoryId')) {
       csv('./lookups/spa_mainCategories.csv').then((d) => {
@@ -100,7 +97,6 @@ export default function DataViewer({
 
   const toggleChecked = () => {
     setChecked((prev) => !prev)
-    handleCheckChange()
   }
 
   const handleChange = (event) => {
@@ -111,12 +107,12 @@ export default function DataViewer({
 
   const handleIPCheck = (event) => {
     if (isIp(event.target.value) === true) {
-      setHelperText('')
-      setError(false)
+      setIpHelperText(' ')
+      setIpError(false)
       handleChange(event)
     } else {
-      setError(true)
-      setHelperText('Please enter a valid IP address')
+      setIpError(true)
+      setIpHelperText('Please enter a valid IP address')
     }
   }
 
@@ -168,7 +164,6 @@ export default function DataViewer({
       setWeightError(true)
       setWeightHelperText('Changing Weight will affect other items!')
       handleChange(event)
-      handleWeightEdit(event.target.value)
     }
   }
 
@@ -193,14 +188,14 @@ export default function DataViewer({
         <Fade in={true} timeout={600}>
           <FormControl variant="outlined" className={classes.formControl}>
             <TextField
-              error={error}
+              error={ipError}
               id="ipAddress"
               label="IP Address"
               variant="outlined"
               onChange={handleIPCheck}
               defaultValue={currentItem.ipAddress}
               disabled={disabled}
-              helperText={helperText}
+              helperText={ipHelperText}
             ></TextField>
           </FormControl>
         </Fade>
